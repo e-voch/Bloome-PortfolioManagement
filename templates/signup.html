@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PortfolioTrack Sign Up</title>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+
+<body>
+
+  <div class="container">
+    <div class="card">
+
+      <h1 class="title">PortfolioTrack</h1>
+      <p class="subtitle">Create your account</p>
+
+      <form method="POST" action="/signup">
+
+        <label>Full name</label>
+        <input type="text" name="name" placeholder="John Doe" required />
+
+        <label>Email address</label>
+        <input type="email" name="email" placeholder="investor@email.com" required />
+
+        <label>Password</label>
+        <input type="password" name="password" placeholder="••••••••" required />
+
+        <button type="submit">Create account</button>
+
+      </form>
+
+      <p class="signup">
+        Already have an account? <a href="/login">Sign in</a>
+      </p>
+
+      <p class="note">
+        You will need to verify your email after signing up
+      </p>
+
+    </div>
+  </div>
+
+</body>
+</html>

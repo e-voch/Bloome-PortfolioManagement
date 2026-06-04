@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PortfolioTrack Login</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+
+  <div class="container">
+    <div class="card">
+      <h1 class="title">PortfolioTrack</h1>
+      <p class="subtitle">Sign in to your account</p>
+
+      <form method="POST" action="/login">
+        <label>Email address</label>
+        <input type="email" name="email" placeholder="investor@email.com" />
+
+        <label>Password</label>
+        <input type="password" name="password" placeholder="••••••••" />
+
+        <button type="submit">Sign in</button>
+      </form>
+
+      <p class="signup">
+        Don’t have an account? <a href="/signup">Create one</a>
+      </p>
+
+      <p class="note">Email verification required on first sign up</p>
+    </div>
+  </div>
+
+</body>
+</html>
