@@ -93,27 +93,33 @@ button:hover {
   font-size: 11px;
   color: #999;
   text-align: center;
-} 
+}
 
 
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
 :root {
-  --ink:        #111110;
-  --ink-muted:  #6b6b67;
-  --ink-faint:  #9b9b96;
-  --surface:    #ffffff;
-  --surface-2:  #f5f4f0;
-  --border:     #e2e1db;
+  --ink: #111110;
+  --ink-muted: #6b6b67;
+  --ink-faint: #9b9b96;
+  --surface: #ffffff;
+  --surface-2: #f5f4f0;
+  --border: #e2e1db;
   --border-mid: #c8c7c0;
-  --accent:     #0f6e56;
-  --accent-lt:  #e1f5ee;
-  --accent-dk:  #085041;
-  --radius-sm:  6px;
-  --radius-md:  10px;
+  --accent: #0f6e56;
+  --accent-lt: #e1f5ee;
+  --accent-dk: #085041;
+  --radius-sm: 6px;
+  --radius-md: 10px;
   --font-serif: 'DM Serif Display', Georgia, serif;
-  --font-sans:  'DM Sans', system-ui, sans-serif;
+  --font-sans: 'DM Sans', system-ui, sans-serif;
 }
 
 html {
@@ -148,7 +154,7 @@ a {
   text-align: center;
 }
 
-.landing-container > div:last-child {
+.landing-container>div:last-child {
   display: flex;
   gap: 0.65rem;
 }
@@ -203,29 +209,64 @@ a {
 
 .btn-outline:hover {
   background: var(--surface-2);
-.chart-container {
-  position: relative;
-  height: 260px;
-}
 
-.toggle button.active {
-  background: #1a56db;
-  color: white;
-  border-color: #1a56db;
-}
+  .chart-container {
+    position: relative;
+    height: 260px;
+  }
 
-.toggle button {
-  padding: 6px 16px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background: white;
-  cursor: pointer;
-  font-size: 13px;
-  color: #555;
-}
+  .toggle button.active {
+    background: #1a56db;
+    color: white;
+    border-color: #1a56db;
+  }
 
-.toggle {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 24px;
-}
+  .toggle button {
+    padding: 6px 16px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    font-size: 13px;
+    color: #555;
+  }
+
+  .toggle {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .news-item {
+    border-bottom: 0.5px solid #e2e8f0;
+    padding: 12px 0;
+  }
+
+  .news-source {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 4px;
+  }
+
+  .news-headline {
+    font-size: 15px;
+    font-weight: 500;
+    color: #111;
+    margin-bottom: 8px;
+  }
+
+  .news-ticker {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: #e8f0fe;
+    color: #1a56db;
+    margin-right: 8px;
+  }
+
+  .filter-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }

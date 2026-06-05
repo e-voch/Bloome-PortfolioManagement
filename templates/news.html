@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News feed</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+
+<body>
+    <div class="container">
+        <div class="card">
+            <h2 class="title">News feed</h2>
+
+            <div class="filter-row">
+                <label>Filter by ticker:</label>
+                <select id="tickerFilter">
+                    <option value="all">All holdings</option>
+                    <option value="NVDA">NVDA</option>
+                    <option value="AAPL">AAPL</option>
+                    <option value="TSLA">TSLA</option>
+                    <option value="MSFT">MSFT</option>
+                </select>
+            </div>
+            <div class="news-item">
+                <p class="news-source">Reuters · 2 hours ago</p>
+                <h3 class="news-headline">Nvidia raises full-year outlook as AI chip demand accelerates</h3>
+                <span class="news-ticker">NVDA</span>
+                <a href="#">Click to read full article →</a>
+            </div>
+            <div class="news-item">
+                <p class="news-source">Bloomberg · 4 hours ago</p>
+                <h3 class="news-headline">Apple set to unveil redesigned MacBook Pro with M4 chip at September event
+                </h3>
+                <span class="news-ticker">AAPL</span>
+                <a href="#">Click to read full article →</a>
+            </div>
+
+            <div class="news-item">
+                <p class="news-source">FT · 6 hours ago</p>
+                <h3 class="news-headline">Tesla delivery numbers miss analyst estimates for second consecutive quarter
+                </h3>
+                <span class="news-ticker">TSLA</span>
+                <a href="#">Click to read full article →</a>
+            </div>
+
+            <div class="news-item">
+                <p class="news-source">CNBC · 8 hours ago</p>
+                <h3 class="news-headline">Microsoft Azure cloud revenue grows 31% as enterprise AI adoption rises</h3>
+                <span class="news-ticker">MSFT</span>
+                <a href="#">Click to read full article →</a>
+            </div>
+
+        </div>
+    </div>
+</body>
+
+</html>
