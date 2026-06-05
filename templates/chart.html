@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Allocation Chart</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="card">
+            <h2 class="title">Portfolio allocation</h2>
+
+            <div class="toggle">
+                <button class="active" onclick="switchView('stock', this)">By stock</button>
+
+            </div>
+
+            <div class="chart-container">
+                <canvas id="allocationChart"></canvas>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const holdings = {{ holdings | tojson }}
+
+        const colours = ["#378ADD", "#1D9E75", "#D85A30", "#888780", "#7F77DD"]
+
+        function getStockData() {
+            const total = holdings.reduce((sum, h) => sum + h.value, 0)
+            return {
+                labels: holdings.map(h => h.ticker),
+                values: holdings.map(h => parseFloat((h.value / total * 100).toFixed(1)))
+            }
+        }
+
+
+        const ctx = document.getElementById("allocationChart").getContext("2d")
+
+        const chart = new Chart(ctx, {
+            type: "doughnut",
+            data: {
+                labels: getStockData().labels,
+                datasets: [{
+                    data: getStockData().values,
+                    backgroundColor: colours,
+                    borderWidth: 2,
+                    borderColor: "#fff"
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: "bottom",
+                        labels: { font: { size: 12 }, padding: 16 }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (item) => ` ${item.label}: ${item.raw}%`
+                        }
+                    }
+                }
+            }
+        })
+
+        function switchView(type, btn) {
+            document.querySelectorAll(".toggle button").forEach(b => b.classList.remove("active"))
+            btn.classList.add("active")
+            const data = type === "stock" ? getStockData() : getSectorData()
+            chart.data.labels = data.labels
+            chart.data.datasets[0].data = data.values
+            chart.data.datasets[0].backgroundColor = colours.slice(0, data.labels.length)
+            chart.update()
+        }
+    </script>
+
+</body>
+
+</html>
