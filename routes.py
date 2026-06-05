@@ -10,7 +10,7 @@ routes = Blueprint("routes", __name__)
 
 @routes.route("/")
 def home():
-    return {"message": "Flask API running"}
+    return render_template("landing.html")
 
 """
 LOGIN PAGE (GET)
