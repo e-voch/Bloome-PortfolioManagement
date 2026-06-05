@@ -1,12 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bloome</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <title>Bloome.</title>
 </head>
-<body>
-    <h1>Welcome to Bloome</h1>
-    <p>Your personal portfolio management tool.</p>
+<body class="landing-body">
+ 
+    <div class="landing-container">
+        <div>
+            <h1 class="landing-header">Bloome.</h1>
+            <p class="landing-subheader">Welcome to Bloome. The ultimate portfolio management solution made for investors.</p>
+        </div>
+        <div>
+            <a href="/login" class="btn btn-outline btn-full">Log in</a>
+            <a href="/signup" class="btn btn-primary btn-full">Create account</a>
+        </div>
+    </div>  
+ 
 </body>
 </html>
