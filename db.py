@@ -6,7 +6,7 @@ DB_NAME = os.getenv("DB_NAME", "portfolio_database")
 DB_CONFIG = {
     "host": os.getenv("DB_HOST", "localhost"),
     "user": os.getenv("DB_USER", "root"),
-    "password": os.getenv("DB_PASSWORD", ""),
+    "password": os.getenv("DB_PASSWORD", "root123"),
 }
 
 
@@ -16,4 +16,3 @@ def get_connection(database=None):
         config["database"] = database
 
     return mysql.connector.connect(**config)
-

@@ -12,16 +12,22 @@ routes = Blueprint("routes", __name__)
 def home():
     return {"message": "Flask API running"}
 
+
 """
 LOGIN PAGE (GET)
 """
+
+
 @routes.route("/login", methods=["GET"])
 def login_page():
     return render_template("login.html")
 
+
 """
 SIGNUP PAGE (GET)
 """
+
+
 @routes.route("/signup", methods=["GET"])
 def signup_page():
     return render_template("signup.html")
@@ -30,38 +36,43 @@ def signup_page():
 """
 HANDLES LOGIN LOGIC
 """
+
+
 @routes.route("/login", methods=["POST"])
 def login():
     print("request recieved")
     email = request.form["email"]
     password = request.form["password"]
-    
+
     conn = get_connection(DB_NAME)
     cursor = conn.cursor(dictionary=True)
 
-    user = get_user_by_email(cursor, email) 
-    
+    user = get_user_by_email(cursor, email)
+
     if not user or not check_password_hash(user["password"], password):
         return {"error": "Invalid email or password"}, 401
-    
+
     if not user["is_verified"]:
-        return {"error" : "Please verify your email first"}, 403
+        return {"error": "Please verify your email first"}, 403
 
     session["user_id"] = user["id"]
-    
+
     print("user logged in")
 
     return redirect("/home")
-    
+
+
 """
 HANDLES SIGNUP LOGIC
 """
+
+
 @routes.route("/signup", methods=["POST"])
 def signup():
     name = request.form["name"]
     email = request.form["email"]
     password = request.form["password"]
-    
+
     hashed_password = generate_password_hash(password)
     token = secrets.token_urlsafe(32)
 
@@ -86,10 +97,13 @@ def signup():
     send_verification_email(email, token)
 
     return redirect("/login")
-    
+
+
 """
 HANDLES EMAIL VERIFICATION
 """
+
+
 @routes.route("/verify/<token>")
 def verify_token(token):
     conn = get_connection("portfolio_database")
@@ -117,3 +131,14 @@ def verify_token(token):
     conn.close()
 
     return "Email verified successfully!"
+
+
+@routes.route("/chart")
+def chart():
+    holdings = [
+        {"ticker": "NVDA", "sector": "Technology", "value": 8295},
+        {"ticker": "AAPL", "sector": "Technology", "value": 6840},
+        {"ticker": "TSLA", "sector": "Consumer",   "value": 5362},
+        {"ticker": "MSFT", "sector": "Technology", "value": 3884},
+    ]
+    return render_template("chart.html", holdings=holdings)
