@@ -250,3 +250,14 @@ ADMIN PAGE
 @routes.route("/admin")
 def admin():
     return render_template("admin.html")
+
+
+@routes.route("/chart")
+def chart():
+    holdings = [
+        {"ticker": "NVDA", "sector": "Technology", "value": 8295},
+        {"ticker": "AAPL", "sector": "Technology", "value": 6840},
+        {"ticker": "TSLA", "sector": "Consumer",   "value": 5362},
+        {"ticker": "MSFT", "sector": "Technology", "value": 3884},
+    ]
+    return render_template("chart.html", holdings=holdings)
