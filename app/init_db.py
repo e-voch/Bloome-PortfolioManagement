@@ -57,7 +57,7 @@ def create_tables():
         CREATE TABLE IF NOT EXISTS transactions (
             id INT AUTO_INCREMENT PRIMARY KEY,
             user_id INT,
-            stock_id INT,
+            symbol VARCHAR(50),
             type ENUM('BUY', 'SELL'),
             quantity INT,
             price DECIMAL(12, 2),
@@ -65,6 +65,17 @@ def create_tables():
         )               
     """)
 
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS news (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            stock_id INT NOT NULL,
+            ticker VARCHAR(50) NOT NULL,
+            title VARCHAR(500) NOT NULL,
+            URL VARCHAR(2000),
+            publisher VARCHAR(500),
+            published_at DATETIME
+        )
+    """)
 
     conn.commit()
 

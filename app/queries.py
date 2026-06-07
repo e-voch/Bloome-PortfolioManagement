@@ -108,7 +108,8 @@ def get_holdings(cursor, user_id):
                h.avg_cost, 
                s.current_price, 
                (h.net_quantity * s.current_price), 
-               ((h.net_quantity * s.current_price) - (h.net_quantity * h.avg_cost))
+               ((h.net_quantity * s.current_price) - (h.net_quantity * h.avg_cost)),
+               h.stock_id
         FROM holdings h
         INNER JOIN stocks s ON s.id = h.stock_id
         WHERE h.user_id = %s
@@ -144,3 +145,25 @@ def get_stock_from_ticker(cursor, ticker):
     )
 
     return cursor.fetchone()
+
+def delete_news_for_stock_id(cursor, stock_id):
+    cursor.execute(
+        "DELETE FROM news WHERE stock_id = %s",
+        (stock_id,)
+    )
+
+def create_news_entry(cursor, stock_id, ticker, title, url, publisher, published_at):
+    cursor.execute(
+        "INSERT INTO news (stock_id, ticker, title, url, publisher, published_at) VALUES  (%s, %s, %s, %s, %s, %s)",
+        (stock_id, ticker, title, url, publisher, published_at)
+    )
+
+
+def get_news_for_stock_id(cursor, stock_id):
+    cursor.execute(
+        "SELECT * FROM news WHERE stock_id = %s",
+        (stock_id,)
+    )
+
+    return cursor.fetchall()
+

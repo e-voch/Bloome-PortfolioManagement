@@ -1,6 +1,6 @@
 import secrets
 from flask import Blueprint, request, render_template, redirect, session
-from queries import create_user, get_user_by_email, get_total_value, get_daily_gain, get_original_investment, get_holdings, get_transactions, create_transaction, get_stock_from_ticker
+from queries import create_user, get_user_by_email, get_total_value, get_daily_gain, get_original_investment, get_holdings, get_transactions, create_transaction, get_stock_from_ticker, get_news_for_stock_id
 from db import get_connection, DB_NAME
 from werkzeug.security import generate_password_hash, check_password_hash
 from mail import send_verification_email
@@ -235,7 +235,28 @@ NEWS PAGE
 """
 @routes.route("/news")
 def news():
-    return render_template("news.html")
+    conn = get_connection(DB_NAME)
+
+    cursor = conn.cursor(dictionary=True)
+
+    user_id = session.get("user_id")
+
+    holdings = get_holdings(cursor, user_id)
+    
+    stock_ids = [h['stock_id'] for h in holdings]
+        
+    articles = []
+
+    for s_id in stock_ids:
+        articles.extend(get_news_for_stock_id(cursor, s_id))
+
+    print(articles)
+
+    return render_template(
+        "news.html",
+        name = session["name"],
+        articles=articles
+    )
 
 """
 WATCHLIST PAGE

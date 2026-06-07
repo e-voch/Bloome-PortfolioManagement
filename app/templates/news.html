@@ -79,35 +79,15 @@
 
         <section class="holdings-table">
             <div style="padding: 0 18px;">
-
+            
+            {% for article in articles %}
             <div class="news-item">
-                <p class="news-source">Reuters · 2 hours ago</p>
-                <p class="news-headline">Nvidia raises full-year outlook as AI chip demand accelerates</p>
-                <span class="news-ticker">NVDA</span>
-                <a href="#" style="font-size: 13px; color: #6b6b65;">Click to read full article →</a>
+                <p class="news-source">{{ article.publisher }} · {{ article.published_at}}</p>
+                <p class="news-headline">{{ article.title }}</p>
+                <span class="news-ticker">{{ article.ticker }}</span>
+                <a href="{{ article.URL }}" style="font-size: 13px; color: #6b6b65;">Click to read full article →</a>
             </div>
-
-            <div class="news-item">
-                <p class="news-source">Bloomberg · 4 hours ago</p>
-                <p class="news-headline">Apple set to unveil redesigned MacBook Pro with M4 chip at September event</p>
-                <span class="news-ticker">AAPL</span>
-                <a href="#" style="font-size: 13px; color: #6b6b65;">Click to read full article →</a>
-            </div>
-
-            <div class="news-item">
-                <p class="news-source">FT · 6 hours ago</p>
-                <p class="news-headline">Tesla delivery numbers miss analyst estimates for second consecutive quarter</p>
-                <span class="news-ticker">TSLA</span>
-                <a href="#" style="font-size: 13px; color: #6b6b65;">Click to read full article →</a>
-            </div>
-
-            <div class="news-item">
-                <p class="news-source">CNBC · 8 hours ago</p>
-                <p class="news-headline">Microsoft Azure cloud revenue grows 31% as enterprise AI adoption rises</p>
-                <span class="news-ticker">MSFT</span>
-                <a href="#" style="font-size: 13px; color: #6b6b65;">Click to read full article →</a>
-            </div>
-            </div>
+            {% endfor %}
 
             <div style="padding: 14px 18px; border-top: 1px solid #f0ede8;">
                 <p style="font-size: 12px; color: #9a9a94;">Feed updates every 30 minutes · Only articles matched to your holdings</p>
