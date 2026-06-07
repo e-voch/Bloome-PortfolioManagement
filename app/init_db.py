@@ -37,8 +37,8 @@ def create_tables():
             name VARCHAR(50) NOT NULL, 
             industry VARCHAR(100) NOT NULL,
             logo VARCHAR(100) NOT NULL,
-            current_price DECIMAL(12, 4),
-            previous_close DECIMAL(12, 4)
+            current_price DECIMAL(12, 2),
+            previous_close DECIMAL(12, 2)
         )
     """)
 
@@ -47,7 +47,7 @@ def create_tables():
             user_id INT,
             stock_id INT,
             net_quantity INT,
-            avg_cost DECIMAL(12, 4),
+            avg_cost DECIMAL(12, 2),
 
             PRIMARY KEY (user_id, stock_id)
         )

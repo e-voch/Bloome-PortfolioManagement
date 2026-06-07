@@ -133,8 +133,8 @@ def dashboard():
     total_investment = get_original_investment(cursor, session.get("user_id")) 
 
     total_gain = total_value - total_investment
-    day_change_percentage = round((day_change / total_value) * 100)
-    total_return_percentage = round((total_gain / total_investment) * 100)
+    day_change_percentage = round((day_change / total_value) * 100) if total_value else 0
+    total_return_percentage = round((total_gain / total_investment) * 100) if total_investment else 0
 
     conn.commit()
     cursor.close()
@@ -164,10 +164,10 @@ def holdings():
     holdings = []
 
     total_value = sum(row[4] for row in data)
-    total_earnings = sum(row[4] for row in data)
+    total_earnings = sum(row[5] for row in data)
 
 
-    holdings = [list(row) + [(row[4] / total_value) * 100] for row in data] 
+    holdings = [list(row) + [round((row[4] / total_value) * 100, 2)] for row in data] 
 
     conn.commit()
     cursor.close()

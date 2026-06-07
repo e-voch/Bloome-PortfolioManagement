@@ -33,7 +33,7 @@ def update_previous_close(cursor, ticker, previous_close):
 def get_total_value(cursor, user_id):
     cursor.execute(
         """
-        SELECT SUM(h.net_quantity * s.current_price)
+        SELECT COALESCE(SUM(h.net_quantity * s.current_price), 0)
         FROM holdings h
         INNER JOIN stocks s on s.id = h.stock_id
         WHERE h.user_id = %s
@@ -56,7 +56,7 @@ def get_original_investment(cursor, user_id):
 def get_daily_gain(cursor, user_id): 
     cursor.execute(
         """
-        SELECT SUM((s.current_price - s.previous_close) * h.net_quantity)
+        SELECT COALESCE(SUM((s.current_price - s.previous_close) * h.net_quantity), 0)
         FROM holdings h
         INNER JOIN stocks s ON s.id = h.stock_id
         WHERE h.user_id = %s
