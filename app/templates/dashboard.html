@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PortfolioTrack Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+
+<div class="app-container">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="logo">
+            PortfolioTrack
+        </div>
+
+        <nav>
+            <ul>
+                <li class="active">
+                    <a href="{{ url_for('routes.dashboard') }}">
+                        <i class="fa-solid fa-house"></i>
+                        Dashboard
+                    </a>
+                </li>
+
+                <li>
+                    <a href="{{ url_for('routes.holdings') }}">
+                        <i class="fa-solid fa-briefcase"></i>
+                        Holdings
+                    </a>
+                </li>
+
+                <li>
+                    <a href="{{ url_for('routes.news') }}">
+                        <i class="fa-regular fa-newspaper"></i>
+                        News
+                    </a>
+                </li>
+
+                <li>
+                    <a href="{{ url_for('routes.transactions') }}">
+                        <i class="fa-solid fa-right-left"></i>
+                        Transactions
+                    </a>
+                </li>
+
+                <li>
+                    <a href="{{ url_for('routes.watchlist') }}">
+                        <i class="fa-regular fa-star"></i>
+                        Watchlist
+                    </a>
+                </li>
+
+                <li>
+                    <a href="{{ url_for('routes.admin') }}">
+                        <i class="fa-solid fa-gear"></i>
+                        Admin
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- Top Bar -->
+        <header class="topbar">
+            <div></div>
+
+            <div class="user-info">
+                <i class="fa-regular fa-user"></i>
+                {{ name }}
+            </div>
+        </header>
+
+        <div class="content">
+
+            <h1>Dashboard</h1>
+
+            <!-- Stats Cards -->
+            <section class="stats-grid">
+
+                <div class="stat-card">
+                    <span>Total value</span>
+                    <h2>£{{ total_value }}</h2>
+                </div>
+
+                <div class="stat-card">
+                    <span>Day change</span>
+
+                    {% if day_change > 0 %}
+                        <h2 class="positive">+{{ day_change }}</h2>
+                        <p class="positive">(+£{{ day_change_percentage }}%)</p>
+                    {% else %}
+                        <h2 class="negative">-£{{ day_change|abs }}</h2>
+                        <p class="negative">({{ day_change_percentage }}%)</p>
+                    {% endif %}
+                </div>
+
+                <div class="stat-card">
+                    <span>Total gain</span>
+                    {% if total_gain > 0 %}
+                        <h2 class="positive">+£{{ total_gain }}</h2>
+                    {% else %}
+                        <h2 class="negative">£{{ total_gain }}</h2>
+                    {% endif %}
+                </div>
+
+                <div class="stat-card">
+                    <span>Total return</span>
+
+                    {% if total_return_percentage > 0 %}
+                        <h2 class="positive">+{{ total_return_percentage }}%</h2>
+                    {% else %}
+                        <h2 class="negative">{{ total_return_percentage }}%</h2>
+                    {% endif %}
+                </div>
+
+            </section>
+
+            <!-- Alert -->
+            <section class="alert-banner">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                NVDA represents 34% of your portfolio — above the 20% threshold
+            </section>
+
+            <!-- Charts -->
+            <section class="charts-grid">
+
+                <div class="chart-card">
+                    <h3>Allocation by stock</h3>
+
+                    <div class="chart-placeholder">
+                        donut chart
+                    </div>
+
+                    <ul class="legend">
+                        <li><span class="dot blue"></span> NVDA 34%</li>
+                        <li><span class="dot green"></span> AAPL 28%</li>
+                        <li><span class="dot orange"></span> TSLA 22%</li>
+                        <li><span class="dot gray"></span> MSFT 16%</li>
+                    </ul>
+                </div>
+
+                <div class="chart-card">
+                    <h3>Allocation by sector <small>(toggle)</small></h3>
+
+                    <div class="chart-placeholder">
+                        donut chart
+                    </div>
+
+                    <ul class="legend">
+                        <li><span class="dot blue"></span> Technology 62%</li>
+                        <li><span class="dot orange"></span> Consumer 22%</li>
+                        <li><span class="dot gray"></span> Other 16%</li>
+                    </ul>
+                </div>
+
+            </section>
+
+        </div>
+    </main>
+
+</div>
+
+</body>
+</html>

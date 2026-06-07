@@ -19,10 +19,6 @@ def create_tables():
     cursor = conn.cursor()
     
     cursor.execute("""
-        DROP TABLE IF EXISTS users
-    """)
-
-    cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INT AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(100) NOT NULL,
@@ -33,6 +29,42 @@ def create_tables():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS stocks (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            symbol VARCHAR(50) NOT NULL,
+            name VARCHAR(50) NOT NULL, 
+            industry VARCHAR(100) NOT NULL,
+            logo VARCHAR(100) NOT NULL,
+            current_price DECIMAL(12, 4),
+            previous_close DECIMAL(12, 4)
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS holdings (
+            user_id INT,
+            stock_id INT,
+            net_quantity INT,
+            avg_cost DECIMAL(12, 4),
+
+            PRIMARY KEY (user_id, stock_id)
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS transactions (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT,
+            stock_id INT,
+            type ENUM('BUY', 'SELL'),
+            quantity INT,
+            price DECIMAL(12, 2),
+            date DATE 
+        )               
+    """)
+
 
     conn.commit()
 

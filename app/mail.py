@@ -11,7 +11,7 @@ def send_verification_email(email, token):
     verification_link = f"http://localhost:5000/verify/{token}"
 
     msg.body = (
-        "Thank you for signing uo \n\n"
+        "Thank you for signing up \n\n"
         f"Verify your account here:\n{verification_link}"
     )
 

@@ -34,3 +34,5 @@ htmlcov/
 *.tmp
 
 .DS_Store
+
+app/db.py
