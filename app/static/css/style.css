@@ -663,3 +663,75 @@ margin-bottom: 24px;
 .news-headline {
     margin-top: 0;
 }
+
+.search-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.search-bar input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 0.5px solid #cbd5e0;
+    border-radius: 8px;
+    font-size: 13px;
+}
+
+.watchlist-label {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 12px;
+}
+
+.watchlist-list {
+    border: 0.5px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.watchlist-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 0.5px solid #e2e8f0;
+    font-size: 13px;
+}
+
+.watchlist-row:last-child {
+    border-bottom: none;
+}
+
+.watchlist-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.company-name {
+    color: #888;
+    font-size: 12px;
+}
+
+.watchlist-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.remove-btn {
+    font-size: 11px;
+    padding: 4px 10px;
+    border: 0.5px solid #cbd5e0;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    color: #555;
+}
+
+.remove-btn:hover {
+    background: #fff5f5;
+    border-color: #feb2b2;
+    color: #c53030;
+}

@@ -282,3 +282,10 @@ def chart():
         {"ticker": "MSFT", "sector": "Technology", "value": 3884},
     ]
     return render_template("chart.html", holdings=holdings)
+
+"""
+STOCK PAGE
+"""
+@routes.route("/stocks/<ticker>")
+def stock_detail(ticker):
+    return render_template("stocks.html", ticker=ticker)
