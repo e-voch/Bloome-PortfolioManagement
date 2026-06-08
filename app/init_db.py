@@ -57,6 +57,7 @@ def create_tables():
         CREATE TABLE IF NOT EXISTS transactions (
             id INT AUTO_INCREMENT PRIMARY KEY,
             user_id INT,
+            stock_id INT,
             symbol VARCHAR(50),
             type ENUM('BUY', 'SELL'),
             quantity INT,

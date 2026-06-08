@@ -124,6 +124,7 @@ HANDLES DASHBOARD PAGE
 """
 @routes.route("/dashboard")
 def dashboard():
+    chart_colours = ['blue', 'green', 'orange', 'grey']
     conn = get_connection(DB_NAME)
 
     cursor = conn.cursor()
@@ -136,6 +137,19 @@ def dashboard():
     day_change_percentage = round((day_change / total_value) * 100) if total_value else 0
     total_return_percentage = round((total_gain / total_investment) * 100) if total_investment else 0
 
+    holdings = get_holdings(cursor, session.get("user_id"))
+
+    #weights = [(round((row[4] / total_value) * 100, 2), row[1]) for row in holdings] 
+
+    #weights.sort(reverse=True)
+    
+    #stock_allocation_chart_values = weights
+
+    #if len(weights) > 3:
+    #    other = sum(weights[4:])
+    #    stock_allocation_chart_values = weights[:4] + [(other, "other")
+
+
     conn.commit()
     cursor.close()
     conn.close()
@@ -147,7 +161,9 @@ def dashboard():
          day_change=day_change,
          total_gain=total_gain,
          day_change_percentage=day_change_percentage,
-         total_return_percentage=total_return_percentage
+         total_return_percentage=total_return_percentage,
+         #stock_allocation_chart_values=stock_allocation_chart_values,
+         chart_colours=chart_colours
     )
 
 """
@@ -166,8 +182,7 @@ def holdings():
     total_value = sum(row[4] for row in data)
     total_earnings = sum(row[5] for row in data)
 
-
-    holdings = [list(row) + [round((row[4] / total_value) * 100, 2)] for row in data] 
+    holdings = [list(row[:-1]) + [round((row[4] / total_value) * 100, 2)] for row in data] 
 
     conn.commit()
     cursor.close()
