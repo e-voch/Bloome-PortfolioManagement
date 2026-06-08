@@ -265,17 +265,13 @@ button:hover {
     font-weight: normal;
 }
 
-.chart-placeholder {
-    width: 140px;
-    height: 140px;
+.chart-container {
+    width: 300px;
+    height: 300px;
     margin: 0 auto 20px;
-    border-radius: 50%;
-    background: #efede8;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #888;
-    font-size: 0.85rem;
 }
 
 .legend {

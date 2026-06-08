@@ -50,7 +50,7 @@ def populate_stock_table():
 
         name = info.get('longName') or info.get('shortName', stock)
         logo = info.get('logo_url', '')
-        industry = info.get('industry', 'Unknown')
+        industry = info.get('sector', 'Unknown')
         
         add_stock(cursor, name, stock, industry, logo)
 

@@ -4,7 +4,6 @@ from queries import create_user, get_user_by_email, get_total_value, get_daily_g
 from db import get_connection, DB_NAME
 from werkzeug.security import generate_password_hash, check_password_hash
 from mail import send_verification_email
-from helper import generate_stock_allocation_values, generate_industry_allocation_values
 
 routes = Blueprint("routes", __name__)
 
@@ -33,6 +32,7 @@ HANDLES LOGIN LOGIC
 """
 @routes.route("/login", methods=["POST"])
 def login():
+    print("request recieved")
     email = request.form["email"]
     password = request.form["password"]
     
@@ -50,6 +50,8 @@ def login():
     session["user_id"] = user["id"]
     session["name"] = user["name"]
     
+    print("user logged in")
+
     return redirect("/dashboard")
     
 """
@@ -122,7 +124,7 @@ HANDLES DASHBOARD PAGE
 """
 @routes.route("/dashboard")
 def dashboard():
-    chart_colours = ['#4285f4', '#34a853', '#f4511e', '#888']
+    chart_colours = ['blue', 'green', 'orange', 'grey']
     conn = get_connection(DB_NAME)
 
     cursor = conn.cursor()
@@ -136,10 +138,18 @@ def dashboard():
     total_return_percentage = round((total_gain / total_investment) * 100) if total_investment else 0
 
     holdings = get_holdings(cursor, session.get("user_id"))
-    
-    stock_allocation_chart_values = generate_stock_allocation_values(holdings, total_value, chart_colours) 
-    industry_allocation_chart_values =  generate_industry_allocation_values(holdings, total_value, chart_colours) 
 
+    weights = [(row[0], round((row[4] / total_value) * 100, 2)) for row in holdings] 
+
+    weights.sort(key=lambda x: x[1], reverse=True)
+    
+    stock_allocation_chart_values = weights
+
+    if len(weights) > 3:
+        other = sum(weights[4:])
+        stock_allocation_chart_values = weights[:4] + (other, "other")
+
+    
     conn.commit()
     cursor.close()
     conn.close()
@@ -153,7 +163,6 @@ def dashboard():
          day_change_percentage=day_change_percentage,
          total_return_percentage=total_return_percentage,
          stock_allocation_chart_values=stock_allocation_chart_values,
-         industry_allocation_chart_values=industry_allocation_chart_values,
          chart_colours=chart_colours
     )
 
