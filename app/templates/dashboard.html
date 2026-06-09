@@ -123,41 +123,34 @@
 
             </section>
 
-            <!-- Alert -->
-            <section class="alert-banner">
-                <i class="fa-solid fa-triangle-exclamation"></i>
-                NVDA represents 34% of your portfolio — above the 20% threshold
-            </section>
-
             <!-- Charts -->
             <section class="charts-grid">
 
                 <div class="chart-card">
                     <h3>Allocation by stock</h3>
-
-                    <div class="chart-placeholder">
-                        donut chart
+                    
+                    <div class="chart-container">
+                        <canvas id="portfolioChart"></canvas>
                     </div>
-
+                    
                     <ul class="legend">
-                        <li><span class="dot blue"></span> NVDA 34%</li>
-                        <li><span class="dot green"></span> AAPL 28%</li>
-                        <li><span class="dot orange"></span> TSLA 22%</li>
-                        <li><span class="dot gray"></span> MSFT 16%</li>
+                        {% for i in range(stock_allocation_chart_values|length) %}
+                            <li><span class="dot" style="background-color: {{chart_colours[i]}}"></span> {{stock_allocation_chart_values[i]["ticker"]}} {{stock_allocation_chart_values[i]["percentage"]}}%</li>
+                        {% endfor %}
                     </ul>
                 </div>
 
                 <div class="chart-card">
-                    <h3>Allocation by sector <small>(toggle)</small></h3>
+                    <h3>Allocation by sector </h3>
 
-                    <div class="chart-placeholder">
-                        donut chart
+                    <div class="chart-container">
+                        <canvas id="industryChart"></canvas>
                     </div>
 
                     <ul class="legend">
-                        <li><span class="dot blue"></span> Technology 62%</li>
-                        <li><span class="dot orange"></span> Consumer 22%</li>
-                        <li><span class="dot gray"></span> Other 16%</li>
+                        {% for i in range(industry_allocation_chart_values|length) %}
+                            <li><span class="dot" style="background-color: {{chart_colours[i]}}"></span> {{industry_allocation_chart_values[i]["industry"]}} {{industry_allocation_chart_values[i]["percentage"]}}%</li>
+                        {% endfor %}
                     </ul>
                 </div>
 
@@ -169,4 +162,42 @@
 </div>
 
 </body>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    const stock_percentages = {{ stock_allocation_chart_values | tojson }}
+    const industry_percentages = {{ industry_allocation_chart_values | tojson  }}    
+
+    new Chart(
+        document.getElementById("portfolioChart"),
+        {
+            type: "pie",
+            data: {
+                labels: stock_percentages.map(sp => sp.ticker),
+                datasets: [{
+                    data: stock_percentages.map(sp => sp.percentage),
+                    backgroundColor: stock_percentages.map(sp => sp.colour)
+                }]
+            }  
+        }
+    );
+
+    new Chart(
+        document.getElementById("industryChart"),
+        {
+            type: "pie",
+            data: {
+                labels: industry_percentages.map(ip => ip.industry),
+                datasets: [{
+                    data: industry_percentages.map(ip => ip.percentage),
+                    backgroundColor: industry_percentages.map(ip => ip.colour)
+                }]
+            }  
+        }
+    );
+
+
+</script>
+
 </html>

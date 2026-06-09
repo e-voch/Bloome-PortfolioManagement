@@ -1,11 +1,13 @@
 import secrets
 import csv
 import io
-from flask import Blueprint, request, render_template, redirect, session, flash, get_flashed_messages, make_response
-from queries import create_user, get_user_by_email, get_total_value, get_daily_gain, get_original_investment, get_holdings, get_transactions, create_transaction, get_stock_from_ticker, get_news_for_stock_id, update_user_name, update_user_email, set_verification_token, update_user_password, delete_user
+from flask import Blueprint, request, render_template, redirect, session, flash, get_flashed_messages, make_response, url_for
+from queries import create_user, get_user_by_email, get_total_value, get_daily_gain, get_original_investment, get_holdings, get_transactions,
+    create_transaction, get_stock_from_ticker, get_news_for_stock_id, update_user_name, update_user_email, set_verification_token, update_user_password, delete_user
 from db import get_connection, DB_NAME
 from werkzeug.security import generate_password_hash, check_password_hash
 from mail import send_verification_email
+from helper import generate_stock_allocation_values, generate_industry_allocation_values
 
 routes = Blueprint("routes", __name__)
 
@@ -34,7 +36,6 @@ HANDLES LOGIN LOGIC
 """
 @routes.route("/login", methods=["POST"])
 def login():
-    print("request recieved")
     email = request.form["email"]
     password = request.form["password"]
     
@@ -44,16 +45,16 @@ def login():
     user = get_user_by_email(cursor, email) 
     
     if not user or not check_password_hash(user["password"], password):
-        return {"error": "Invalid email or password"}, 401
+        flash("Incorrect email or password", "danger")
+        return redirect("/login")
     
     if not user["is_verified"]:
-        return {"error" : "Please verify your email first"}, 403
+        flash("Please verify your email first", "danger")
+        return redirect("/login")
 
     session["user_id"] = user["id"]
     session["name"] = user["name"]
     
-    print("user logged in")
-
     return redirect("/dashboard")
     
 """
@@ -75,9 +76,11 @@ def signup():
     existing_user = cursor.fetchone()
 
     if existing_user:
+        flash("A user with that email already exists", "danger")
         cursor.close()
         conn.close()
-        return "User already exists", 409
+
+        return redirect("/signup")
 
     create_user(cursor, name, email, hashed_password, token)
 
@@ -87,6 +90,8 @@ def signup():
     conn.close()
 
     send_verification_email(email, token)
+
+    flash("Account created! Please verify your email", 'success')
 
     return redirect("/signup")
     
@@ -126,7 +131,7 @@ HANDLES DASHBOARD PAGE
 """
 @routes.route("/dashboard")
 def dashboard():
-    chart_colours = ['blue', 'green', 'orange', 'grey']
+    chart_colours = ['#4285f4', '#34a853', '#f4511e', '#888']
     conn = get_connection(DB_NAME)
 
     cursor = conn.cursor()
@@ -140,17 +145,9 @@ def dashboard():
     total_return_percentage = round((total_gain / total_investment) * 100) if total_investment else 0
 
     holdings = get_holdings(cursor, session.get("user_id"))
-
-    #weights = [(round((row[4] / total_value) * 100, 2), row[1]) for row in holdings] 
-
-    #weights.sort(reverse=True)
     
-    #stock_allocation_chart_values = weights
-
-    #if len(weights) > 3:
-    #    other = sum(weights[4:])
-    #    stock_allocation_chart_values = weights[:4] + [(other, "other")
-
+    stock_allocation_chart_values = generate_stock_allocation_values(holdings, total_value, chart_colours) 
+    industry_allocation_chart_values =  generate_industry_allocation_values(holdings, total_value, chart_colours) 
 
     conn.commit()
     cursor.close()
@@ -164,7 +161,8 @@ def dashboard():
          total_gain=total_gain,
          day_change_percentage=day_change_percentage,
          total_return_percentage=total_return_percentage,
-         #stock_allocation_chart_values=stock_allocation_chart_values,
+         stock_allocation_chart_values=stock_allocation_chart_values,
+         industry_allocation_chart_values=industry_allocation_chart_values,
          chart_colours=chart_colours
     )
 
@@ -500,3 +498,10 @@ def chart():
         {"ticker": "MSFT", "sector": "Technology", "value": 3884},
     ]
     return render_template("chart.html", holdings=holdings)
+
+"""
+STOCK PAGE
+"""
+@routes.route("/stocks/<ticker>")
+def stock_detail(ticker):
+    return render_template("stocks.html", ticker=ticker)
