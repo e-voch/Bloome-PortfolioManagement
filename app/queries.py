@@ -194,3 +194,73 @@ def get_transaction(cursor, transaction_id):
     )
 
     return cursor.fetchone()
+
+def update_user_name(cursor, user_id, name):
+    cursor.execute(
+        "UPDATE users SET name = %s WHERE id = %s",
+        (name, user_id)
+    )
+
+def update_user_email(cursor, user_id, email):
+    cursor.execute(
+        "UPDATE users SET email = %s, is_verified = FALSE, verification_token = NULL WHERE id = %s",
+        (email, user_id)
+    )
+
+def set_verification_token(cursor, user_id, token):
+    cursor.execute(
+        "UPDATE users SET verification_token = %s WHERE id = %s",
+        (token, user_id)
+    )
+
+def update_user_password(cursor, user_id, hashed_password):
+    cursor.execute(
+        "UPDATE users SET password = %s WHERE id = %s",
+        (hashed_password, user_id)
+    )
+
+def delete_user(cursor, user_id):
+    cursor.execute("DELETE FROM holdings WHERE user_id = %s", (user_id,))
+    cursor.execute("DELETE FROM transactions WHERE user_id = %s", (user_id,))
+    cursor.execute("DELETE FROM users WHERE id = %s", (user_id,))
+
+def get_watchlist(cursor, user_id):
+    cursor.execute("""
+        SELECT s.id, s.symbol, s.name, s.current_price,
+               COALESCE(s.current_price - s.previous_close, 0) AS price_change,
+               CASE WHEN s.previous_close IS NOT NULL AND s.previous_close > 0
+                    THEN ROUND(((s.current_price - s.previous_close) / s.previous_close) * 100, 2)
+                    ELSE 0
+               END AS pct_change
+        FROM watchlist w
+        JOIN stocks s ON s.id = w.stock_id
+        WHERE w.user_id = %s
+        ORDER BY s.symbol
+    """, (user_id,))
+    return cursor.fetchall()
+
+def get_all_stocks(cursor):
+    cursor.execute("""
+        SELECT s.id, s.symbol, s.name, s.current_price,
+               COALESCE(s.current_price - s.previous_close, 0) AS price_change,
+               CASE WHEN s.previous_close IS NOT NULL AND s.previous_close > 0
+                    THEN ROUND(((s.current_price - s.previous_close) / s.previous_close) * 100, 2)
+                    ELSE 0
+               END AS pct_change
+        FROM stocks s
+        ORDER BY s.symbol
+    """)
+    return cursor.fetchall()
+
+def add_to_watchlist(cursor, user_id, stock_id):
+    cursor.execute(
+        "INSERT IGNORE INTO watchlist (user_id, stock_id) VALUES (%s, %s)",
+        (user_id, stock_id)
+    )
+
+def remove_from_watchlist(cursor, user_id, stock_id):
+    cursor.execute(
+        "DELETE FROM watchlist WHERE user_id = %s AND stock_id = %s",
+        (user_id, stock_id)
+    )
+

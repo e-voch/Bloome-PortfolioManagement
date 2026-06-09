@@ -1,6 +1,10 @@
 import secrets
-from flask import Blueprint, request, render_template, redirect, session, flash, url_for
-from queries import create_user, get_user_by_email, get_total_value, get_daily_gain, get_original_investment, get_holdings, get_transactions, create_transaction, get_stock_from_ticker, get_news_for_stock_id, recompute_holding, delete_transaction, get_transaction
+import csv
+import io
+from flask import Blueprint, request, render_template, redirect, session, flash, get_flashed_messages, make_response, url_for
+from queries import create_user, get_user_by_email, get_total_value, get_daily_gain, get_original_investment, get_holdings, get_transactions
+from queries import create_transaction, get_stock_from_ticker, get_news_for_stock_id, update_user_name, update_user_email, set_verification_token, update_user_password, delete_user
+from queries import get_watchlist, get_all_stocks, add_to_watchlist, remove_from_watchlist
 from db import get_connection, DB_NAME
 from werkzeug.security import generate_password_hash, check_password_hash
 from mail import send_verification_email
@@ -303,14 +307,273 @@ WATCHLIST PAGE
 """
 @routes.route("/watchlist")
 def watchlist():
-    return render_template("watchlist.html")
+    user_id = session.get("user_id")
+    conn = get_connection(DB_NAME)
+    cursor = conn.cursor()
+
+    watchlist_items = get_watchlist(cursor, user_id)
+    all_stocks = get_all_stocks(cursor)
+
+    cursor.close()
+    conn.close()
+
+    watchlist_ids = [row[0] for row in watchlist_items]
+
+    all_stocks_json = [
+        (row[0], row[1], row[2],
+         float(row[3]) if row[3] is not None else None,
+         float(row[4]) if row[4] is not None else None,
+         float(row[5]) if row[5] is not None else None)
+        for row in all_stocks
+    ]
+
+    return render_template(
+        "watchlist.html",
+        name=session.get("name"),
+        watchlist=watchlist_items,
+        all_stocks=all_stocks_json,
+        watchlist_ids=watchlist_ids
+    )
+
+
+"""
+WATCHLIST - ADD
+"""
+@routes.route("/watchlist/add", methods=["POST"])
+def watchlist_add():
+    user_id = session.get("user_id")
+    stock_id = request.form.get("stock_id")
+    conn = get_connection(DB_NAME)
+    cursor = conn.cursor()
+    add_to_watchlist(cursor, user_id, stock_id)
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return redirect("/watchlist")
+
+
+"""
+WATCHLIST - REMOVE
+"""
+@routes.route("/watchlist/remove", methods=["POST"])
+def watchlist_remove():
+    user_id = session.get("user_id")
+    stock_id = request.form.get("stock_id")
+    conn = get_connection(DB_NAME)
+    cursor = conn.cursor()
+    remove_from_watchlist(cursor, user_id, stock_id)
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return redirect("/watchlist")
 
 """
 ADMIN PAGE
 """
 @routes.route("/admin")
 def admin():
-    return render_template("admin.html")
+    conn = get_connection(DB_NAME)
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT name, email, is_verified FROM users WHERE id = %s", (session.get("user_id"),))
+    user = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    messages = {cat: msg for cat, msg in get_flashed_messages(with_categories=True)}
+
+    return render_template(
+        "admin.html",
+        name=user["name"] if user else "",
+        email=user["email"] if user else "",
+        is_verified=user["is_verified"] if user else False,
+        edit=request.args.get("edit"),
+        messages=messages
+    )
+
+
+"""
+ADMIN - UPDATE NAME
+"""
+@routes.route("/admin/update-name", methods=["POST"])
+def admin_update_name():
+    new_name = request.form.get("name", "").strip()
+
+    if not new_name:
+        flash("Name cannot be empty.", "name_error")
+        return redirect("/admin?edit=name")
+
+    conn = get_connection(DB_NAME)
+    cursor = conn.cursor()
+    update_user_name(cursor, session.get("user_id"), new_name)
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    session["name"] = new_name
+    flash("Name updated successfully.", "name_success")
+    return redirect("/admin")
+
+
+"""
+ADMIN - UPDATE EMAIL
+Sets is_verified to False so the user must re-verify their new email.
+"""
+@routes.route("/admin/update-email", methods=["POST"])
+def admin_update_email():
+    user_id = session.get("user_id")
+    new_email = request.form.get("email", "").strip()
+
+    if not new_email:
+        flash("Email cannot be empty.", "email_error")
+        return redirect("/admin?edit=email")
+
+    conn = get_connection(DB_NAME)
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("SELECT id FROM users WHERE email = %s AND id != %s", (new_email, user_id))
+    if cursor.fetchone():
+        cursor.close()
+        conn.close()
+        flash("That email is already in use.", "email_error")
+        return redirect("/admin?edit=email")
+
+    update_user_email(cursor, user_id, new_email)
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    flash("Email updated. Please verify your new email address.", "email_success")
+    return redirect("/admin")
+
+
+"""
+ADMIN - SEND VERIFICATION EMAIL
+Generates a fresh token and sends the verification email to the user's current email.
+"""
+@routes.route("/admin/send-verification", methods=["POST"])
+def admin_send_verification():
+    user_id = session.get("user_id")
+    token = secrets.token_urlsafe(32)
+
+    conn = get_connection(DB_NAME)
+    cursor = conn.cursor(dictionary=True)
+    set_verification_token(cursor, user_id, token)
+    conn.commit()
+
+    cursor.execute("SELECT email FROM users WHERE id = %s", (user_id,))
+    user = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    send_verification_email(user["email"], token)
+    flash("Verification email sent! Check your inbox.", "verified_success")
+    return redirect("/admin")
+
+
+"""
+ADMIN - UPDATE PASSWORD
+"""
+@routes.route("/admin/update-password", methods=["POST"])
+def admin_update_password():
+    user_id = session.get("user_id")
+    current_password = request.form.get("current_password", "")
+    new_password  = request.form.get("new_password", "")
+    confirm_password = request.form.get("confirm_password", "")
+
+    if not new_password:
+        flash("New password cannot be empty.", "password_error")
+        return redirect("/admin?edit=password")
+
+    if new_password != confirm_password:
+        flash("Passwords do not match.", "password_error")
+        return redirect("/admin?edit=password")
+
+    conn = get_connection(DB_NAME)
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT password FROM users WHERE id = %s", (user_id,))
+    user = cursor.fetchone()
+
+    if not user or not check_password_hash(user["password"], current_password):
+        cursor.close()
+        conn.close()
+        flash("Current password is incorrect.", "password_error")
+        return redirect("/admin?edit=password")
+
+    update_user_password(cursor, user_id, generate_password_hash(new_password))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    flash("Password updated successfully.", "password_success")
+    return redirect("/admin")
+
+
+"""
+ADMIN - EXPORT DATA AS CSV
+"""
+@routes.route("/admin/export")
+def admin_export():
+    user_id = session.get("user_id")
+    conn = get_connection(DB_NAME)
+    cursor = conn.cursor()
+
+    holdings = get_holdings(cursor, user_id)
+    transactions = get_transactions(cursor, user_id)
+
+    cursor.close()
+    conn.close()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    writer.writerow(["Holdings"])
+    writer.writerow(["Symbol", "Quantity", "Avg Cost", "Current Price", "Value", "Gain/Loss"])
+    for row in holdings:
+        writer.writerow(row[:6])
+
+    writer.writerow([])
+
+    writer.writerow(["Transactions"])
+    writer.writerow(["Date", "Symbol", "Type", "Quantity", "Price", "Total"])
+    for row in transactions:
+        writer.writerow(row)
+
+    output.seek(0)
+    response = make_response(output.getvalue())
+    response.headers["Content-Disposition"] = "attachment; filename=portfolio_export.csv"
+    response.headers["Content-Type"] = "text/csv"
+    return response
+
+
+"""
+LOGOUT
+"""
+@routes.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/")
+
+
+"""
+ADMIN - DELETE ACCOUNT
+"""
+@routes.route("/admin/delete-account", methods=["POST"])
+def admin_delete_account():
+    confirm = request.form.get("confirm", "")
+    if confirm != "CONFIRM":
+        flash("Please type CONFIRM to delete your account.", "delete_error")
+        return redirect("/admin")
+
+    user_id = session.get("user_id")
+    conn = get_connection(DB_NAME)
+    cursor = conn.cursor()
+    delete_user(cursor, user_id)
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    session.clear()
+    return redirect("/")
 
 
 @routes.route("/chart")

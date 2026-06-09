@@ -78,6 +78,14 @@ def create_tables():
         )
     """)
 
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS watchlist (
+            user_id INT NOT NULL,
+            stock_id INT NOT NULL,
+            PRIMARY KEY (user_id, stock_id)
+        )
+    """)
+
     conn.commit()
 
     print("Tables created")
