@@ -167,3 +167,33 @@ def get_news_for_stock_id(cursor, stock_id):
 
     return cursor.fetchall()
 
+
+def update_user_name(cursor, user_id, name):
+    cursor.execute(
+        "UPDATE users SET name = %s WHERE id = %s",
+        (name, user_id)
+    )
+
+def update_user_email(cursor, user_id, email):
+    cursor.execute(
+        "UPDATE users SET email = %s, is_verified = FALSE, verification_token = NULL WHERE id = %s",
+        (email, user_id)
+    )
+
+def set_verification_token(cursor, user_id, token):
+    cursor.execute(
+        "UPDATE users SET verification_token = %s WHERE id = %s",
+        (token, user_id)
+    )
+
+def update_user_password(cursor, user_id, hashed_password):
+    cursor.execute(
+        "UPDATE users SET password = %s WHERE id = %s",
+        (hashed_password, user_id)
+    )
+
+def delete_user(cursor, user_id):
+    cursor.execute("DELETE FROM holdings WHERE user_id = %s", (user_id,))
+    cursor.execute("DELETE FROM transactions WHERE user_id = %s", (user_id,))
+    cursor.execute("DELETE FROM users WHERE id = %s", (user_id,))
+
