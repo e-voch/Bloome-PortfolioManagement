@@ -1,5 +1,5 @@
 import secrets
-from flask import Blueprint, request, render_template, redirect, session
+from flask import Blueprint, request, render_template, redirect, session, flash, url_for
 from queries import create_user, get_user_by_email, get_total_value, get_daily_gain, get_original_investment, get_holdings, get_transactions, create_transaction, get_stock_from_ticker, get_news_for_stock_id
 from db import get_connection, DB_NAME
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -42,10 +42,12 @@ def login():
     user = get_user_by_email(cursor, email) 
     
     if not user or not check_password_hash(user["password"], password):
-        return {"error": "Invalid email or password"}, 401
+        flash("Incorrect email or password", "danger")
+        return redirect("/login")
     
     if not user["is_verified"]:
-        return {"error" : "Please verify your email first"}, 403
+        flash("Please verify your email first", "danger")
+        return redirect("/login")
 
     session["user_id"] = user["id"]
     session["name"] = user["name"]
@@ -71,9 +73,11 @@ def signup():
     existing_user = cursor.fetchone()
 
     if existing_user:
+        flash("A user with that email already exists", "danger")
         cursor.close()
         conn.close()
-        return "User already exists", 409
+
+        return redirect("/signup")
 
     create_user(cursor, name, email, hashed_password, token)
 
@@ -83,6 +87,8 @@ def signup():
     conn.close()
 
     send_verification_email(email, token)
+
+    flash("Account created! Please verify your email", 'success')
 
     return redirect("/signup")
     
