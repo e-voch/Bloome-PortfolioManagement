@@ -203,6 +203,10 @@ def transactions():
     cursor = conn.cursor()
 
     transactions = get_transactions(cursor, session.get("user_id"))
+
+    transactions.sort(key=lambda x: x[0], reverse=True)
+    
+    open_modal = request.args.get("open_modal") == "1"
     
     conn.commit()
     cursor.close()
@@ -211,7 +215,8 @@ def transactions():
     return render_template(
         "transactions.html",
         transactions = transactions,
-        name = session.get("name")
+        name = session.get("name"),
+        open_modal=open_modal
     )
 
 
@@ -230,8 +235,16 @@ def add_transaction():
     price = request.form.get("price") 
 
     user_id = session.get("user_id")
-    stock_id = get_stock_from_ticker(cursor, ticker)['id']
+    stock_details = get_stock_from_ticker(cursor, ticker.upper())
+        
+    print(stock_details)
+
+    if not stock_details:
+        flash("Stock ticker not recognised", "danger")
+        return redirect("/transactions?open_modal=1")
     
+    stock_id = stock_details['id']
+
     create_transaction(cursor, user_id, stock_id, side, shares, price, date)
     recompute_holding(cursor, user_id, stock_id)
 
