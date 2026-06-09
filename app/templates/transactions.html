@@ -160,6 +160,13 @@
                                 <td>{{ transaction[3] }}</td>
                                 <td>£{{ transaction[4] }}</td>
                                 <td>£{{ transaction[5] }}</td>
+                                <td> 
+                                    <form action="{{url_for('routes.remove_transaction', transaction_id=transaction[6])}}", method="POST">
+                                        <button type="submit" class="delete-btn">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
                             </tr>
                         {% endfor %}
                     </tbody>

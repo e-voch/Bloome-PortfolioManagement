@@ -71,34 +71,6 @@ def create_transaction(cursor, user_id, stock_id, side, quantity, price, date):
         (user_id, stock_id, side, quantity, price, date)
     )
     
-    if side == "BUY":
-        cursor.execute(
-            """
-            INSERT INTO holdings (user_id, stock_id, net_quantity, avg_cost)
-            VALUES (%s, %s, %s, %s) AS new
-            ON DUPLICATE KEY UPDATE
-            avg_cost =
-                ((holdings.net_quantity * holdings.avg_cost) + (VALUES(net_quantity) * VALUES(avg_cost)))
-                / (holdings.net_quantity + VALUES(net_quantity)),
-
-            net_quantity = holdings.net_quantity + VALUES(net_quantity)
-            """,
-
-            (user_id, stock_id, quantity, price)
-        )
-
-    elif side == "SELL":
-        cursor.execute(
-            """
-            UPDATE holdings
-            SET net_quantity = net_quantity - %s
-            WHERE user_id = %s AND stock_id = %s
-            """,
-            (quantity, user_id, stock_id)
-        )
-
-    cursor.execute("DELETE FROM holdings WHERE net_quantity <=0 ")
-
 
 def get_holdings(cursor, user_id):
     cursor.execute(
@@ -128,7 +100,8 @@ def get_transactions(cursor, user_id):
                t.type, 
                t.quantity,
                t.price,
-               (t.price * t.quantity)
+               (t.price * t.quantity),
+               t.id
         FROM transactions t
         INNER JOIN stocks s ON s.id = t.stock_id
         WHERE t.user_id = %s
@@ -167,3 +140,57 @@ def get_news_for_stock_id(cursor, stock_id):
 
     return cursor.fetchall()
 
+
+def delete_transaction(cursor, transaction_id):
+    cursor.execute(
+        "DELETE FROM transactions WHERE id = %s",
+        (transaction_id,)
+    )
+
+
+def recompute_holding(cursor, user_id, stock_id):
+    print(user_id, stock_id)
+    cursor.execute(
+        """
+        SELECT type, quantity, price
+        FROM transactions
+        WHERE user_id = %s AND stock_id = %s
+        ORDER BY date, id
+        """,
+        (user_id, stock_id)
+    )
+
+    quantity = 0
+    cost = 0
+
+    for transaction in cursor.fetchall():
+        if transaction["type"] == "BUY":
+            quantity += transaction["quantity"]
+            cost += transaction["price"]
+        elif transaction["type"] == "SELL":
+            quantity -= transaction["quantity"]
+
+    cursor.execute(
+        "DELETE FROM holdings WHERE user_id = %s and stock_id = %s",
+        (user_id, stock_id)
+    )
+
+    if quantity > 0:
+        avg_price = (cost / quantity)
+
+        cursor.execute(
+            """
+            INSERT INTO holdings (user_id, stock_id, net_quantity, avg_cost)
+            VALUES (%s, %s, %s, %s)
+            """,
+            (user_id, stock_id, quantity, avg_price)
+        )
+
+def get_transaction(cursor, transaction_id):
+    print(transaction_id)
+    cursor.execute(
+        "SELECT * FROM transactions WHERE id = %s",
+        (transaction_id,)
+    )
+
+    return cursor.fetchone()

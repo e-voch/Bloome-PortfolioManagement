@@ -1,6 +1,6 @@
 import secrets
 from flask import Blueprint, request, render_template, redirect, session, flash, url_for
-from queries import create_user, get_user_by_email, get_total_value, get_daily_gain, get_original_investment, get_holdings, get_transactions, create_transaction, get_stock_from_ticker, get_news_for_stock_id
+from queries import create_user, get_user_by_email, get_total_value, get_daily_gain, get_original_investment, get_holdings, get_transactions, create_transaction, get_stock_from_ticker, get_news_for_stock_id, recompute_holding, delete_transaction, get_transaction
 from db import get_connection, DB_NAME
 from werkzeug.security import generate_password_hash, check_password_hash
 from mail import send_verification_email
@@ -221,7 +221,6 @@ ADDS TRANSACTION
 @routes.route("/add_transaction", methods = ["POST"])
 def add_transaction():
     conn = get_connection(DB_NAME)
-
     cursor = conn.cursor(dictionary=True)
 
     ticker = request.form.get("ticker") 
@@ -232,9 +231,10 @@ def add_transaction():
 
     user_id = session.get("user_id")
     stock_id = get_stock_from_ticker(cursor, ticker)['id']
-
+    
     create_transaction(cursor, user_id, stock_id, side, shares, price, date)
-   
+    recompute_holding(cursor, user_id, stock_id)
+
     conn.commit()
     cursor.close()
     conn.close()
@@ -243,12 +243,29 @@ def add_transaction():
 
 
 """
+DELETES TRANSACTION
+"""
+@routes.route("/delete_transaction/<int:transaction_id>", methods = ["POST"])
+def remove_transaction(transaction_id):
+    conn = get_connection(DB_NAME)
+    cursor = conn.cursor(dictionary=True)
+    
+    transaction_details = get_transaction(cursor, transaction_id) 
+
+    delete_transaction(cursor, transaction_id)
+    recompute_holding(cursor, session["user_id"], transaction_details['stock_id'])
+    
+    conn.commit()
+    conn.close()
+
+    return redirect("/transactions")
+
+"""
 NEWS PAGE
 """
 @routes.route("/news")
 def news():
     conn = get_connection(DB_NAME)
-
     cursor = conn.cursor(dictionary=True)
 
     user_id = session.get("user_id")
@@ -261,8 +278,6 @@ def news():
 
     for s_id in stock_ids:
         articles.extend(get_news_for_stock_id(cursor, s_id))
-
-    print(articles)
 
     return render_template(
         "news.html",
