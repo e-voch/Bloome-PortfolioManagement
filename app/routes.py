@@ -4,6 +4,7 @@ import io
 from flask import Blueprint, request, render_template, redirect, session, flash, get_flashed_messages, make_response, url_for
 from queries import create_user, get_user_by_email, get_total_value, get_daily_gain, get_original_investment, get_holdings, get_transactions
 from queries import create_transaction, get_stock_from_ticker, get_news_for_stock_id, update_user_name, update_user_email, set_verification_token, update_user_password, delete_user
+from queries import get_watchlist, get_all_stocks, add_to_watchlist, remove_from_watchlist
 from db import get_connection, DB_NAME
 from werkzeug.security import generate_password_hash, check_password_hash
 from mail import send_verification_email
@@ -278,7 +279,65 @@ WATCHLIST PAGE
 """
 @routes.route("/watchlist")
 def watchlist():
-    return render_template("watchlist.html")
+    user_id = session.get("user_id")
+    conn = get_connection(DB_NAME)
+    cursor = conn.cursor()
+
+    watchlist_items = get_watchlist(cursor, user_id)
+    all_stocks = get_all_stocks(cursor)
+
+    cursor.close()
+    conn.close()
+
+    watchlist_ids = [row[0] for row in watchlist_items]
+
+    all_stocks_json = [
+        (row[0], row[1], row[2],
+         float(row[3]) if row[3] is not None else None,
+         float(row[4]) if row[4] is not None else None,
+         float(row[5]) if row[5] is not None else None)
+        for row in all_stocks
+    ]
+
+    return render_template(
+        "watchlist.html",
+        name=session.get("name"),
+        watchlist=watchlist_items,
+        all_stocks=all_stocks_json,
+        watchlist_ids=watchlist_ids
+    )
+
+
+"""
+WATCHLIST - ADD
+"""
+@routes.route("/watchlist/add", methods=["POST"])
+def watchlist_add():
+    user_id = session.get("user_id")
+    stock_id = request.form.get("stock_id")
+    conn = get_connection(DB_NAME)
+    cursor = conn.cursor()
+    add_to_watchlist(cursor, user_id, stock_id)
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return redirect("/watchlist")
+
+
+"""
+WATCHLIST - REMOVE
+"""
+@routes.route("/watchlist/remove", methods=["POST"])
+def watchlist_remove():
+    user_id = session.get("user_id")
+    stock_id = request.form.get("stock_id")
+    conn = get_connection(DB_NAME)
+    cursor = conn.cursor()
+    remove_from_watchlist(cursor, user_id, stock_id)
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return redirect("/watchlist")
 
 """
 ADMIN PAGE

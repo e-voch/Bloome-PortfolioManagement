@@ -1,0 +1,299 @@
+/* Watchlist cards grid */
+.wl-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 32px;
+}
+
+.wl-card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.wl-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2px;
+}
+
+.wl-ticker {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a18;
+}
+
+.wl-company {
+    font-size: 12px;
+    color: #9a9a94;
+}
+
+.wl-price-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.wl-price {
+    font-size: 15px;
+    font-weight: 500;
+    color: #1a1a18;
+}
+
+.wl-pos {
+    font-size: 12.5px;
+    color: #2e7d32;
+    font-weight: 500;
+}
+
+.wl-neg {
+    font-size: 12.5px;
+    color: #c0392b;
+    font-weight: 500;
+}
+
+.wl-remove-btn {
+    background: none;
+    border: none;
+    color: #9a9a94;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 3px 6px;
+    border-radius: 6px;
+    margin-top: 0;
+    width: auto;
+    transition: color 0.15s, background 0.15s;
+}
+
+.wl-remove-btn:hover {
+    color: #c0392b;
+    background: #fef2f2;
+}
+
+/* Empty state */
+.wl-empty {
+    text-align: center;
+    padding: 40px 0;
+    color: #9a9a94;
+    margin-bottom: 32px;
+}
+
+.wl-empty-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+    display: block;
+}
+
+.wl-empty p {
+    font-size: 13.5px;
+}
+
+/* Add section */
+.wl-add-section {
+    max-width: 700px;
+}
+
+.wl-section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a18;
+    margin-bottom: 14px;
+}
+
+/* Search */
+.wl-search-wrap {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.wl-search-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 0 14px;
+    transition: border-color 0.15s;
+}
+
+.wl-search-box:focus-within {
+    border-color: #2563eb;
+}
+
+.wl-search-icon {
+    color: #9a9a94;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+.wl-search-box input {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 11px 0;
+    font-size: 13.5px;
+    color: #1a1a18;
+    background: transparent;
+    margin-top: 0;
+}
+
+.wl-suggestions {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    z-index: 100;
+    overflow: hidden;
+}
+
+.wl-suggestion {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: background 0.1s;
+}
+
+.wl-suggestion:hover {
+    background: #f5f5f3;
+}
+
+.wl-suggestion .wl-ticker {
+    min-width: 56px;
+}
+
+/* Browse hint */
+.wl-browse-hint {
+    font-size: 13px;
+    color: #9a9a94;
+    margin-bottom: 10px;
+}
+
+/* Stocks table */
+.wl-table {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.wl-table-head {
+    display: grid;
+    grid-template-columns: 1fr 100px 150px 120px;
+    padding: 10px 18px;
+    background: #fafaf8;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: #9a9a94;
+}
+
+.wl-table-row {
+    display: grid;
+    grid-template-columns: 1fr 100px 150px 120px;
+    align-items: center;
+    padding: 12px 18px;
+    border-bottom: 1px solid #f0ede8;
+    font-size: 13.5px;
+    transition: background 0.1s;
+}
+
+.wl-table-row:last-child {
+    border-bottom: none;
+}
+
+.wl-table-row:hover {
+    background: #fafaf8;
+}
+
+.wl-stock-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.wl-no-results {
+    padding: 24px 18px;
+    font-size: 13.5px;
+    color: #9a9a94;
+    text-align: center;
+}
+
+/* Add button */
+.wl-add-btn {
+    padding: 6px 14px;
+    background: none;
+    border: 1px solid #2563eb;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #2563eb;
+    cursor: pointer;
+    margin-top: 0;
+    width: auto;
+    transition: background 0.15s, color 0.15s;
+}
+
+.wl-add-btn:hover {
+    background: #2563eb;
+    color: white;
+}
+
+.wl-added {
+    font-size: 12.5px;
+    color: #2e7d32;
+    font-weight: 500;
+}
+
+/* Pagination */
+.wl-pagination {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 14px;
+    justify-content: flex-end;
+}
+
+.wl-pagination button {
+    padding: 7px 14px;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #555;
+    cursor: pointer;
+    margin-top: 0;
+    width: auto;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.wl-pagination button:hover:not(:disabled) {
+    background: #f5f5f3;
+    border-color: #ccc;
+}
+
+.wl-pagination button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+#wl-page-info {
+    font-size: 13px;
+    color: #9a9a94;
+}

@@ -197,3 +197,43 @@ def delete_user(cursor, user_id):
     cursor.execute("DELETE FROM transactions WHERE user_id = %s", (user_id,))
     cursor.execute("DELETE FROM users WHERE id = %s", (user_id,))
 
+def get_watchlist(cursor, user_id):
+    cursor.execute("""
+        SELECT s.id, s.symbol, s.name, s.current_price,
+               COALESCE(s.current_price - s.previous_close, 0) AS price_change,
+               CASE WHEN s.previous_close IS NOT NULL AND s.previous_close > 0
+                    THEN ROUND(((s.current_price - s.previous_close) / s.previous_close) * 100, 2)
+                    ELSE 0
+               END AS pct_change
+        FROM watchlist w
+        JOIN stocks s ON s.id = w.stock_id
+        WHERE w.user_id = %s
+        ORDER BY s.symbol
+    """, (user_id,))
+    return cursor.fetchall()
+
+def get_all_stocks(cursor):
+    cursor.execute("""
+        SELECT s.id, s.symbol, s.name, s.current_price,
+               COALESCE(s.current_price - s.previous_close, 0) AS price_change,
+               CASE WHEN s.previous_close IS NOT NULL AND s.previous_close > 0
+                    THEN ROUND(((s.current_price - s.previous_close) / s.previous_close) * 100, 2)
+                    ELSE 0
+               END AS pct_change
+        FROM stocks s
+        ORDER BY s.symbol
+    """)
+    return cursor.fetchall()
+
+def add_to_watchlist(cursor, user_id, stock_id):
+    cursor.execute(
+        "INSERT IGNORE INTO watchlist (user_id, stock_id) VALUES (%s, %s)",
+        (user_id, stock_id)
+    )
+
+def remove_from_watchlist(cursor, user_id, stock_id):
+    cursor.execute(
+        "DELETE FROM watchlist WHERE user_id = %s AND stock_id = %s",
+        (user_id, stock_id)
+    )
+
