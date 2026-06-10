@@ -3,75 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bloome. - Watchlist</title>
+    <title>Watchlist - Bloome</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/watchlist.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body>
 
 <div class="app-container">
 
-    <!-- Sidebar -->
     <aside class="sidebar">
-        <div class="logo">
-            Bloome.
-        </div>
-
+        <div class="logo">Bloome</div>
         <nav>
             <ul>
                 <li>
                     <a href="{{ url_for('routes.dashboard') }}">
-                        <i class="fa-solid fa-house"></i>
-                        Dashboard
+                        <i class="fa-solid fa-house"></i> Dashboard
                     </a>
                 </li>
-
                 <li>
                     <a href="{{ url_for('routes.holdings') }}">
-                        <i class="fa-solid fa-briefcase"></i>
-                        Holdings
+                        <i class="fa-solid fa-briefcase"></i> Holdings
                     </a>
                 </li>
-
                 <li>
                     <a href="{{ url_for('routes.news') }}">
-                        <i class="fa-regular fa-newspaper"></i>
-                        News
+                        <i class="fa-regular fa-newspaper"></i> News
                     </a>
                 </li>
-
                 <li>
                     <a href="{{ url_for('routes.transactions') }}">
-                        <i class="fa-solid fa-right-left"></i>
-                        Transactions
+                        <i class="fa-solid fa-right-left"></i> Transactions
                     </a>
                 </li>
-
                 <li class="active">
                     <a href="{{ url_for('routes.watchlist') }}">
-                        <i class="fa-regular fa-star"></i>
-                        Watchlist
+                        <i class="fa-regular fa-star"></i> Watchlist
                     </a>
                 </li>
-
                 <li>
                     <a href="{{ url_for('routes.admin') }}">
-                        <i class="fa-solid fa-gear"></i>
-                        Admin
+                        <i class="fa-solid fa-gear"></i> Admin
                     </a>
                 </li>
             </ul>
         </nav>
     </aside>
 
-    <!-- Main Content -->
     <main class="main-content">
 
-        <!-- Top Bar -->
         <header class="topbar">
             <div></div>
-
             <div class="user-info">
                 <i class="fa-regular fa-user"></i>
                 {{ name }}
@@ -81,43 +63,176 @@
         <div class="content">
 
             <h1>Watchlist</h1>
-            <div class="search-bar">
-                <input type="text" id="stockSearch" placeholder="Search for ticke ror company" />
-                <button onclick="searchStock()">Search</button>
-                <p class="watchlist-label">Stocks you're monitoring</p>
 
-<div class="watchlist-list">
-    <div class="watchlist-row">
-        <div class="watchlist-info">
-            <strong>META</strong>
-            <span class="company-name">Meta Platforms</span>
-        </div>
-        <div class="watchlist-right">
-            <span>£482.30</span>
-            <span class="badge-pos">+1.2%</span>
-            <button class="remove-btn">Remove</button>
-        </div>
-    </div>
-
-    <div class="watchlist-row">
-        <div class="watchlist-info">
-            <strong>GOOGL</strong>
-            <span class="company-name">Alphabet Inc.</span>
-        </div>
-        <div class="watchlist-right">
-            <span>£172.10</span>
-            <span class="badge-neg">-0.4%</span>
-            <button class="remove-btn">Remove</button>
-        </div>
-    </div>
-</div>
+            <!-- YOUR WATCHLIST -->
+            {% if watchlist %}
+            <div class="wl-grid">
+                {% for s in watchlist %}
+                <div class="wl-card">
+                    <div class="wl-card-top">
+                        <span class="wl-ticker">{{ s[1] }}</span>
+                        <form action="/watchlist/remove" method="POST" style="margin:0">
+                            <input type="hidden" name="stock_id" value="{{ s[0] }}">
+                            <button type="submit" class="wl-remove-btn" title="Remove from watchlist">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </form>
+                    </div>
+                    <span class="wl-company">{{ s[2] }}</span>
+                    <div class="wl-price-row">
+                        <span class="wl-price">${{ "%.2f"|format(s[3]) if s[3] else "—" }}</span>
+                        {% if s[4] is not none %}
+                            <span class="wl-change {{ 'wl-pos' if s[4] >= 0 else 'wl-neg' }}">
+                                {{ "%+.2f"|format(s[4]) }} ({{ "%+.2f"|format(s[5]) }}%)
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
             </div>
+            {% else %}
+            <div class="wl-empty">
+                <i class="fa-regular fa-star wl-empty-icon"></i>
+                <p>Your watchlist is empty. Add stocks below to start tracking them.</p>
+            </div>
+            {% endif %}
 
+            <!-- ADD STOCKS -->
+            <div class="wl-add-section">
+                <h2 class="wl-section-title">Add Stocks</h2>
+
+                <div class="wl-search-wrap">
+                    <div class="wl-search-box">
+                        <i class="fa-solid fa-magnifying-glass wl-search-icon"></i>
+                        <input type="text" id="wl-search" placeholder="Search by ticker or company name..." autocomplete="off">
+                    </div>
+                    <div id="wl-suggestions" class="wl-suggestions"></div>
+                </div>
+
+                <div class="wl-table">
+                    <div class="wl-table-head">
+                        <span>Stock</span>
+                        <span>Price</span>
+                        <span>Day Change</span>
+                        <span></span>
+                    </div>
+                    <div id="wl-table-body"></div>
+                </div>
+
+                <div class="wl-pagination">
+                    <button id="wl-prev" onclick="wlPrev()" disabled>
+                        <i class="fa-solid fa-chevron-left"></i> Previous
+                    </button>
+                    <span id="wl-page-info"></span>
+                    <button id="wl-next" onclick="wlNext()">
+                        Next <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
 
         </div>
     </main>
-
 </div>
+
+<script>
+    const ALL_STOCKS = {{ all_stocks | tojson }};
+    const WATCHLIST_IDS = new Set({{ watchlist_ids | tojson }});
+    const PAGE_SIZE = 10;
+    let currentPage = 0;
+    let filtered = ALL_STOCKS;
+
+    function fmtChange(priceChange, pctChange) {
+        if (priceChange === null) return '<span style="color:#9a9a94">—</span>';
+        const cls = priceChange >= 0 ? 'wl-pos' : 'wl-neg';
+        const sign = priceChange >= 0 ? '+' : '';
+        return `<span class="${cls}">${sign}$${Math.abs(priceChange).toFixed(2)} (${sign}${pctChange.toFixed(2)}%)</span>`;
+    }
+
+    function renderPage() {
+        const start = currentPage * PAGE_SIZE;
+        const page = filtered.slice(start, start + PAGE_SIZE);
+        const body = document.getElementById('wl-table-body');
+        const total = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+
+        if (page.length === 0) {
+            body.innerHTML = '<div class="wl-no-results">No stocks found.</div>';
+        } else {
+            body.innerHTML = page.map(s => {
+                const inWl = WATCHLIST_IDS.has(s[0]);
+                const action = inWl
+                    ? '<span class="wl-added"><i class="fa-solid fa-check"></i> In Watchlist</span>'
+                    : `<form action="/watchlist/add" method="POST" style="margin:0">
+                           <input type="hidden" name="stock_id" value="${s[0]}">
+                           <button type="submit" class="wl-add-btn">
+                               <i class="fa-solid fa-plus"></i> Add
+                           </button>
+                       </form>`;
+                return `
+                    <div class="wl-table-row">
+                        <div class="wl-stock-info">
+                            <span class="wl-ticker">${s[1]}</span>
+                            <span class="wl-company">${s[2]}</span>
+                        </div>
+                        <span class="wl-price">${s[3] !== null ? '$' + s[3].toFixed(2) : '—'}</span>
+                        ${fmtChange(s[4], s[5])}
+                        <span>${action}</span>
+                    </div>`;
+            }).join('');
+        }
+
+        document.getElementById('wl-page-info').textContent = `Page ${currentPage + 1} of ${total}`;
+        document.getElementById('wl-prev').disabled = currentPage === 0;
+        document.getElementById('wl-next').disabled = (currentPage + 1) >= total;
+    }
+
+    function wlPrev() { if (currentPage > 0) { currentPage--; renderPage(); } }
+    function wlNext() { if ((currentPage + 1) * PAGE_SIZE < filtered.length) { currentPage++; renderPage(); } }
+
+    const searchInput = document.getElementById('wl-search');
+    const suggestionsBox = document.getElementById('wl-suggestions');
+
+    searchInput.addEventListener('input', function () {
+        const q = this.value.trim().toLowerCase();
+        suggestionsBox.innerHTML = '';
+        suggestionsBox.style.display = 'none';
+
+        filtered = q
+            ? ALL_STOCKS.filter(s => s[1].toLowerCase().includes(q) || s[2].toLowerCase().includes(q))
+            : ALL_STOCKS;
+
+        currentPage = 0;
+        renderPage();
+
+        if (q) {
+            const top = filtered.slice(0, 5);
+            if (top.length) {
+                suggestionsBox.innerHTML = top.map(s =>
+                    `<div class="wl-suggestion" onclick="pickSuggestion('${s[1]}')">
+                        <span class="wl-ticker">${s[1]}</span>
+                        <span class="wl-company">${s[2]}</span>
+                    </div>`
+                ).join('');
+                suggestionsBox.style.display = 'block';
+            }
+        }
+    });
+
+    function pickSuggestion(ticker) {
+        searchInput.value = ticker;
+        suggestionsBox.style.display = 'none';
+        filtered = ALL_STOCKS.filter(s => s[1] === ticker);
+        currentPage = 0;
+        renderPage();
+    }
+
+    document.addEventListener('click', function (e) {
+        if (!e.target.closest('.wl-search-wrap')) {
+            suggestionsBox.style.display = 'none';
+        }
+    });
+
+    renderPage();
+</script>
 
 </body>
 </html>

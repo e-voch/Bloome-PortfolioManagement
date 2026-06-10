@@ -81,8 +81,16 @@
                     <i class="fa-solid fa-plus"></i>
                     Add transaction
                 </button>
+            
             <div class="modal-overlay" id="modalOverlay">
                 <div class="modal">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <p class="alert alert-{{ category }}">{{ message }}</p>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
                     <div class="modal-header">
                         <h2>Add transaction</h2>
                         <button class="modal-close" onclick="closeModal()">
@@ -160,6 +168,13 @@
                                 <td>{{ transaction[3] }}</td>
                                 <td>£{{ transaction[4] }}</td>
                                 <td>£{{ transaction[5] }}</td>
+                                <td> 
+                                    <form action="{{url_for('routes.remove_transaction', transaction_id=transaction[6])}}", method="POST">
+                                        <button type="submit" class="delete-btn">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -185,4 +200,12 @@
     document.getElementById('modalOverlay').addEventListener('click', function(e) {
         if (e.target === this) closeModal();
     });
+
+document.addEventListener("DOMContentLoaded", function () {
+    
+
+    {% if open_modal %}
+        openModal()
+    {% endif %}
+});
 </script>

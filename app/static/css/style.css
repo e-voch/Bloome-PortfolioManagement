@@ -351,7 +351,6 @@ button:hover {
 }
 
 .holdings-table td:first-child { text-align: left; }
-.holdings-table td:last-child { text-align: center; }
 
 .total-row td {
     border-top: 1px solid #e0e0e0;
@@ -370,6 +369,26 @@ button:hover {
 }
 
 .edit-btn:hover {
+    color: #2563eb;
+    background: #eff6ff;
+}
+
+.delete-btn {
+    background: none;
+    border: none;
+    color: #9a9a94;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 6px;
+    font-size: 13px;
+    transition: color 0.15s, background 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.delete-btn:hover {
     color: #2563eb;
     background: #eff6ff;
 }
