@@ -671,11 +671,12 @@ margin-bottom: 24px;
 }
 
 .search-bar input {
-    flex: 1;
+     flex: 1;
     padding: 8px 12px;
     border: 0.5px solid #cbd5e0;
     border-radius: 8px;
     font-size: 13px;
+    height: 38px;
 }
 
 .watchlist-label {
@@ -734,4 +735,30 @@ margin-bottom: 24px;
     background: #fff5f5;
     border-color: #feb2b2;
     color: #c53030;
+}
+
+.search-bar button {
+    height: 38px;
+    padding: 0 16px;
+    background: #1a56db;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+}
+.badge-pos {
+    color: #276749;
+    background: #c6f6d5;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+}
+
+.badge-neg {
+    color: #c53030;
+    background: #fff5f5;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 12px;
 }
