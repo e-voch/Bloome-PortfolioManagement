@@ -265,17 +265,13 @@ button:hover {
     font-weight: normal;
 }
 
-.chart-placeholder {
-    width: 140px;
-    height: 140px;
+.chart-container {
+    width: 300px;
+    height: 300px;
     margin: 0 auto 20px;
-    border-radius: 50%;
-    background: #efede8;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #888;
-    font-size: 0.85rem;
 }
 
 .legend {
@@ -355,7 +351,6 @@ button:hover {
 }
 
 .holdings-table td:first-child { text-align: left; }
-.holdings-table td:last-child { text-align: center; }
 
 .total-row td {
     border-top: 1px solid #e0e0e0;
@@ -374,6 +369,26 @@ button:hover {
 }
 
 .edit-btn:hover {
+    color: #2563eb;
+    background: #eff6ff;
+}
+
+.delete-btn {
+    background: none;
+    border: none;
+    color: #9a9a94;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 6px;
+    font-size: 13px;
+    transition: color 0.15s, background 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.delete-btn:hover {
     color: #2563eb;
     background: #eff6ff;
 }
@@ -671,12 +686,11 @@ margin-bottom: 24px;
 }
 
 .search-bar input {
-     flex: 1;
+    flex: 1;
     padding: 8px 12px;
     border: 0.5px solid #cbd5e0;
     border-radius: 8px;
     font-size: 13px;
-    height: 38px;
 }
 
 .watchlist-label {
@@ -737,28 +751,35 @@ margin-bottom: 24px;
     color: #c53030;
 }
 
-.search-bar button {
-    height: 38px;
-    padding: 0 16px;
-    background: #1a56db;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 13px;
-    cursor: pointer;
-}
-.badge-pos {
-    color: #276749;
-    background: #c6f6d5;
-    padding: 2px 8px;
-    border-radius: 6px;
-    font-size: 12px;
+.alert {
+    padding: 12px 18px;
+    border-radius: var(--radius-sm);
+    font-size: 13.5px;
+    font-weight: 500;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
 }
 
-.badge-neg {
-    color: #c53030;
-    background: #fff5f5;
-    padding: 2px 8px;
-    border-radius: 6px;
-    font-size: 12px;
+.alert-success {
+    background: var(--accent-lt);
+    color: var(--accent-dk);
+    border-color: #9fe1cb;
+}
+
+.alert-danger {
+    background: #fee2e2;
+    color: #991b1b;
+    border-color: #fca5a5;
+}
+
+.alert-warning {
+    background: #fef3c7;
+    color: #92400e;
+    border-color: #fcd34d;
+}
+
+.alert-info {
+    background: #eff6ff;
+    color: #1e40af;
+    border-color: #bfdbfe;
 }

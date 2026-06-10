@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PortfolioTrack Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
 </head>
 <body>
 
@@ -34,7 +36,7 @@
                     </a>
                 </li>
 
-                <li class>
+                <li>
                     <a href="{{ url_for('routes.news') }}">
                         <i class="fa-regular fa-newspaper"></i>
                         News
@@ -67,14 +69,17 @@
 
     <!-- Main Content -->
     <main class="main-content">
-
-        <!-- Top Bar -->
         <header class="topbar">
             <div></div>
-
-            <div class="user-info">
-                <i class="fa-regular fa-user"></i>
-                {{ name }}
+            <div class="topbar-right">
+                <div class="user-info">
+                    <i class="fa-regular fa-user"></i>
+                    {{ name }}
+                </div>
+                <a href="/logout" class="logout-btn">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    Log out
+                </a>
             </div>
         </header>
 
@@ -82,10 +87,192 @@
 
             <h1>Admin</h1>
 
+            <div class="admin-profile-card">
+
+                <!-- NAME -->
+                <div class="admin-profile-row">
+                    <span class="admin-profile-label">Name</span>
+                    <div class="admin-profile-value-area">
+                        {% if edit == 'name' %}
+                            <form class="edit-form" action="/admin/update-name" method="POST">
+                                <input type="text" class="edit-input" name="name" value="{{ name }}" required autofocus>
+                                <div class="edit-actions">
+                                    <button type="submit" class="save-btn">Save</button>
+                                    <a href="/admin" class="cancel-link">Cancel</a>
+                                </div>
+                            </form>
+                            {% if messages.name_error %}
+                                <span class="msg-error">{{ messages.name_error }}</span>
+                            {% endif %}
+                        {% else %}
+                            <div class="view-mode">
+                                <span class="view-value">{{ name }}</span>
+                                <a href="/admin?edit=name" class="edit-link" title="Edit name">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+                            </div>
+                            {% if messages.name_success %}
+                                <span class="msg-success">{{ messages.name_success }}</span>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- EMAIL -->
+                <div class="admin-profile-row">
+                    <span class="admin-profile-label">Email</span>
+                    <div class="admin-profile-value-area">
+                        {% if edit == 'email' %}
+                            <form class="edit-form" action="/admin/update-email" method="POST">
+                                <input type="email" class="edit-input" name="email" value="{{ email }}" required autofocus>
+                                <div class="edit-actions">
+                                    <button type="submit" class="save-btn">Save</button>
+                                    <a href="/admin" class="cancel-link">Cancel</a>
+                                </div>
+                            </form>
+                            {% if messages.email_error %}
+                                <span class="msg-error">{{ messages.email_error }}</span>
+                            {% endif %}
+                        {% else %}
+                            <div class="view-mode">
+                                <span class="view-value">{{ email }}</span>
+                                <a href="/admin?edit=email" class="edit-link" title="Edit email">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+                            </div>
+                            {% if messages.email_success %}
+                                <span class="msg-success">{{ messages.email_success }}</span>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- VERIFIED -->
+                <div class="admin-profile-row">
+                    <span class="admin-profile-label">Verified</span>
+                    <div class="admin-profile-value-area">
+                        <div class="view-mode">
+                            <span class="view-value {{ 'verified-yes' if is_verified else 'verified-no' }}">
+                                {{ "Yes" if is_verified else "No" }}
+                            </span>
+                            {% if not is_verified %}
+                                <form action="/admin/send-verification" method="POST" style="margin:0">
+                                    <button type="submit" class="verify-btn">Send verification email</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                        {% if messages.verified_success %}
+                            <span class="msg-success">{{ messages.verified_success }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- PASSWORD -->
+                <div class="admin-profile-row">
+                    <span class="admin-profile-label">Password</span>
+                    <div class="admin-profile-value-area">
+                        {% if edit == 'password' %}
+                            <form class="edit-form" action="/admin/update-password" method="POST">
+                                <input type="password" class="edit-input" name="current_password" placeholder="Current password" required autofocus>
+                                <input type="password" class="edit-input" name="new_password" placeholder="New password" required>
+                                <input type="password" class="edit-input" name="confirm_password" placeholder="Confirm new password" required>
+                                <div class="edit-actions">
+                                    <button type="submit" class="save-btn">Change password</button>
+                                    <a href="/admin" class="cancel-link">Cancel</a>
+                                </div>
+                            </form>
+                            {% if messages.password_error %}
+                                <span class="msg-error">{{ messages.password_error }}</span>
+                            {% endif %}
+                        {% else %}
+                            <div class="view-mode">
+                                <span class="view-value">••••••••</span>
+                                <a href="/admin?edit=password" class="edit-link" title="Change password">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+                            </div>
+                            {% if messages.password_success %}
+                                <span class="msg-success">{{ messages.password_success }}</span>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="export-section">
+                <h2 class="export-title">Export Data</h2>
+                <div class="export-card">
+                    <div class="export-row">
+                        <div>
+                            <span class="export-label">Download Portfolio Data</span>
+                            <p class="export-desc">Export your holdings and transaction history as a CSV file.</p>
+                        </div>
+                        <a href="/admin/export" class="export-btn">
+                            <i class="fa-solid fa-download"></i>
+                            Export CSV
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="danger-zone">
+                <h2 class="danger-zone-title">Danger Zone</h2>
+                <div class="danger-zone-card">
+                    <div class="danger-zone-row">
+                        <div>
+                            <span class="danger-zone-label">Delete Account</span>
+                            <p class="danger-zone-desc">Permanently delete your account and all associated data. This cannot be undone.</p>
+                        </div>
+                        <button class="delete-account-btn" onclick="openDeleteModal()">Delete Account</button>
+                    </div>
+                    {% if messages.delete_error %}
+                        <span class="msg-error">{{ messages.delete_error }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
         </div>
     </main>
 
 </div>
+
+<!-- Delete Account -->
+<div id="delete-modal" class="modal-overlay">
+    <div class="modal-box">
+        <h3 class="modal-title">Delete Account</h3>
+        <p class="modal-body">This will permanently delete your account and all your data. This action <strong>cannot be undone</strong>.</p>
+        <p class="modal-body">Type <strong>CONFIRM</strong> to proceed:</p>
+        <form action="/admin/delete-account" method="POST">
+            <input type="text" id="delete-confirm-input" name="confirm" class="edit-input" placeholder="CONFIRM" autocomplete="off">
+            <div class="modal-actions">
+                <button type="submit" id="delete-confirm-btn" class="delete-confirm-btn" disabled>Delete my account</button>
+                <button type="button" class="cancel-link" onclick="closeDeleteModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openDeleteModal() {
+        document.getElementById('delete-modal').style.display = 'flex';
+        document.getElementById('delete-confirm-input').value = '';
+        document.getElementById('delete-confirm-btn').disabled = true;
+        setTimeout(() => document.getElementById('delete-confirm-input').focus(), 50);
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('delete-modal').style.display = 'none';
+    }
+
+    document.getElementById('delete-confirm-input').addEventListener('input', function () {
+        document.getElementById('delete-confirm-btn').disabled = this.value !== 'CONFIRM';
+    });
+
+    document.getElementById('delete-modal').addEventListener('click', function (e) {
+        if (e.target === this) closeDeleteModal();
+    });
+</script>
 
 </body>
 </html>

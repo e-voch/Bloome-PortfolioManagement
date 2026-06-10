@@ -9,9 +9,17 @@
 </head>
 
 <body class="auth-page">
-
+    
   <div class="container">
     <div class="card">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <p class="alert alert-{{ category }}">{{ message }}</p>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
 
       <h1 class="title">PortfolioTrack</h1>
       <p class="subtitle">Create your account</p>
