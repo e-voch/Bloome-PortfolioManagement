@@ -27,7 +27,7 @@ def get_stock_news(ticker):
 def refresh_news():
     conn = get_connection(DB_NAME)
 
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(dictionary=True, buffered=True)
 
     for ticker in STOCK_LIST:
         stock_data = get_stock_from_ticker(cursor, ticker) 

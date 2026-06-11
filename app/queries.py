@@ -14,9 +14,9 @@ def get_user_by_email(cursor, email):
 
 def get_or_create_industry(cursor, name):
     cursor.execute("SELECT id FROM industries WHERE name = %s", (name,))
-    row = cursor.fetchone()
-    if row:
-        return row["id"]
+    rows = cursor.fetchall()
+    if rows:
+        return rows[0]["id"]
     cursor.execute("INSERT INTO industries (name) VALUES (%s)", (name,))
     return cursor.lastrowid
 
@@ -130,7 +130,8 @@ def get_stock_from_ticker(cursor, ticker):
         (ticker,)
     )
 
-    return cursor.fetchone()
+    rows = cursor.fetchall()
+    return rows[0] if rows else None
 
 def delete_news_for_stock_id(cursor, stock_id):
     cursor.execute(
@@ -184,7 +185,7 @@ def recompute_holding(cursor, user_id, stock_id):
     for transaction in cursor.fetchall():
         if transaction["type"] == "BUY":
             quantity += transaction["quantity"]
-            cost += transaction["price"] * quantity
+            cost += transaction["price"] * transaction["quantity"]
         elif transaction["type"] == "SELL":
             quantity -= transaction["quantity"]
 
@@ -211,7 +212,8 @@ def get_transaction(cursor, transaction_id):
         (transaction_id,)
     )
 
-    return cursor.fetchone()
+    rows = cursor.fetchall()
+    return rows[0] if rows else None
 
 def update_user_name(cursor, user_id, name):
     cursor.execute(
