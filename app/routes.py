@@ -1,7 +1,7 @@
 import secrets
 import csv
 import io
-from flask import Blueprint, request, render_template, redirect, flash, get_flashed_messages, make_response, jsonify 
+from flask import Blueprint, request, render_template, redirect, flash, get_flashed_messages, make_response, jsonify
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, get_jwt, unset_jwt_cookies, set_access_cookies
 from queries import create_user, get_user_by_email, get_total_value, get_daily_gain, get_original_investment, get_holdings, get_transactions
 from queries import create_transaction, get_stock_from_ticker, get_news_for_stock_id, update_user_name, update_user_email, set_verification_token, update_user_password, delete_user
@@ -18,16 +18,22 @@ routes = Blueprint("routes", __name__)
 def home():
     return render_template("landing.html")
 
+
 """
 LOGIN PAGE (GET)
 """
+
+
 @routes.route("/login", methods=["GET"])
 def login_page():
     return render_template("login.html")
 
+
 """
 SIGNUP PAGE (GET)
 """
+
+
 @routes.route("/signup", methods=["GET"])
 def signup_page():
     return render_template("signup.html")
@@ -36,24 +42,26 @@ def signup_page():
 """
 HANDLES LOGIN LOGIC
 """
+
+
 @routes.route("/login", methods=["POST"])
 def login():
     email = request.form["email"]
     password = request.form["password"]
-    
+
     conn = get_connection(DB_NAME)
     cursor = conn.cursor(dictionary=True)
 
-    user = get_user_by_email(cursor, email) 
-    
+    user = get_user_by_email(cursor, email)
+
     if not user or not check_password_hash(user["password"], password):
         flash("Incorrect email or password", "danger")
         return redirect("/login")
-    
+
     if not user["is_verified"]:
         flash("Please verify your email first", "danger")
         return redirect("/login")
-    
+
     access_token = create_access_token(
         identity=str(user["id"]),
         additional_claims={
@@ -63,17 +71,21 @@ def login():
 
     response = redirect("/dashboard")
     set_access_cookies(response, access_token)
-    
+
     return response
+
+
 """
 HANDLES SIGNUP LOGIC
 """
+
+
 @routes.route("/signup", methods=["POST"])
 def signup():
     name = request.form["name"]
     email = request.form["email"]
     password = request.form["password"]
-    
+
     hashed_password = generate_password_hash(password)
     token = secrets.token_urlsafe(32)
 
@@ -102,10 +114,13 @@ def signup():
     flash("Account created! Please verify your email", 'success')
 
     return redirect("/signup")
-    
+
+
 """
 HANDLES EMAIL VERIFICATION
 """
+
+
 @routes.route("/verify/<token>")
 def verify_token(token):
     conn = get_connection(DB_NAME)
@@ -134,9 +149,12 @@ def verify_token(token):
 
     return "Email verified successfully!"
 
+
 """
 HANDLES DASHBOARD PAGE
 """
+
+
 @routes.route("/dashboard")
 @jwt_required()
 def dashboard():
@@ -148,44 +166,51 @@ def dashboard():
     claims = get_jwt()
 
     total_value = get_total_value(cursor, user_id)
-    day_change = get_daily_gain(cursor, user_id) 
-    total_investment = get_original_investment(cursor, user_id) 
+    day_change = get_daily_gain(cursor, user_id)
+    total_investment = get_original_investment(cursor, user_id)
 
     total_gain = total_value - total_investment
-    day_change_percentage = round((day_change / total_value) * 100) if total_value else 0
-    total_return_percentage = round((total_gain / total_investment) * 100) if total_investment else 0
+    day_change_percentage = round(
+        (day_change / total_value) * 100) if total_value else 0
+    total_return_percentage = round(
+        (total_gain / total_investment) * 100) if total_investment else 0
 
     holdings = get_holdings(cursor, user_id)
-    
-    stock_allocation_chart_values = generate_stock_allocation_values(holdings, total_value, chart_colours) 
-    industry_allocation_chart_values =  generate_industry_allocation_values(holdings, total_value, chart_colours) 
+
+    stock_allocation_chart_values = generate_stock_allocation_values(
+        holdings, total_value, chart_colours)
+    industry_allocation_chart_values = generate_industry_allocation_values(
+        holdings, total_value, chart_colours)
 
     conn.commit()
     cursor.close()
     conn.close()
 
     return render_template(
-         "dashboard.html",
-         name=claims["name"],
-         total_value=total_value,
-         day_change=day_change,
-         total_gain=total_gain,
-         day_change_percentage=day_change_percentage,
-         total_return_percentage=total_return_percentage,
-         stock_allocation_chart_values=stock_allocation_chart_values,
-         industry_allocation_chart_values=industry_allocation_chart_values,
-         chart_colours=chart_colours
+        "dashboard.html",
+        name=claims["name"],
+        total_value=total_value,
+        day_change=day_change,
+        total_gain=total_gain,
+        day_change_percentage=day_change_percentage,
+        total_return_percentage=total_return_percentage,
+        stock_allocation_chart_values=stock_allocation_chart_values,
+        industry_allocation_chart_values=industry_allocation_chart_values,
+        chart_colours=chart_colours
     )
+
 
 """
 HANDLES HOLDINGS PAGE
 """
+
+
 @routes.route("/holdings")
 @jwt_required()
 def holdings():
     conn = get_connection(DB_NAME)
     cursor = conn.cursor()
-    
+
     user_id = get_jwt_identity()
     claims = get_jwt()
 
@@ -196,7 +221,8 @@ def holdings():
     total_value = sum(row[4] for row in data)
     total_earnings = sum(row[5] for row in data)
 
-    holdings = [list(row[:-1]) + [round((row[4] / total_value) * 100, 2)] for row in data] 
+    holdings = [list(row[:-1]) + [round((row[4] / total_value) * 100, 2)]
+                for row in data]
 
     conn.commit()
     cursor.close()
@@ -210,9 +236,12 @@ def holdings():
         total_earnings=total_earnings
     )
 
+
 """
 Handles TRANSACTIONS PAGE
 """
+
+
 @routes.route("/transactions")
 @jwt_required()
 def transactions():
@@ -225,9 +254,9 @@ def transactions():
     transactions = get_transactions(cursor, user_id)
 
     transactions.sort(key=lambda x: x[0], reverse=True)
-    
+
     open_modal = request.args.get("open_modal") == "1"
-    
+
     conn.commit()
     cursor.close()
     conn.close()
@@ -243,26 +272,28 @@ def transactions():
 """
 ADDS TRANSACTION
 """
-@routes.route("/add_transaction", methods = ["POST"])
+
+
+@routes.route("/add_transaction", methods=["POST"])
 @jwt_required()
 def add_transaction():
     conn = get_connection(DB_NAME)
     cursor = conn.cursor(dictionary=True)
 
-    ticker = request.form.get("ticker") 
-    side = request.form.get("type") 
-    date = request.form.get("date") 
-    shares = request.form.get("shares") 
-    price = request.form.get("price") 
-    
+    ticker = request.form.get("ticker")
+    side = request.form.get("type")
+    date = request.form.get("date")
+    shares = request.form.get("shares")
+    price = request.form.get("price")
+
     user_id = get_jwt_identity()
 
     stock_details = get_stock_from_ticker(cursor, ticker.upper())
-        
+
     if not stock_details:
         flash("Stock ticker not recognised", "danger")
         return redirect("/transactions?open_modal=1")
-    
+
     stock_id = stock_details['id']
 
     create_transaction(cursor, user_id, stock_id, side, shares, price, date)
@@ -278,27 +309,32 @@ def add_transaction():
 """
 DELETES TRANSACTION
 """
-@routes.route("/delete_transaction/<int:transaction_id>", methods = ["POST"])
+
+
+@routes.route("/delete_transaction/<int:transaction_id>", methods=["POST"])
 @jwt_required()
 def remove_transaction(transaction_id):
     conn = get_connection(DB_NAME)
     cursor = conn.cursor(dictionary=True)
-    
-    transaction_details = get_transaction(cursor, transaction_id) 
+
+    transaction_details = get_transaction(cursor, transaction_id)
 
     user_id = get_jwt_identity()
 
     delete_transaction(cursor, transaction_id)
     recompute_holding(cursor, user_id, transaction_details['stock_id'])
-    
+
     conn.commit()
     conn.close()
 
     return redirect("/transactions")
 
+
 """
 NEWS PAGE
 """
+
+
 @routes.route("/news")
 @jwt_required()
 def news():
@@ -309,9 +345,9 @@ def news():
     claims = get_jwt()
 
     holdings = get_holdings(cursor, user_id)
-    
+
     stock_ids = [h['stock_id'] for h in holdings]
-        
+
     articles = []
 
     for s_id in stock_ids:
@@ -323,9 +359,12 @@ def news():
         articles=articles
     )
 
+
 """
 WATCHLIST PAGE
 """
+
+
 @routes.route("/watchlist")
 @jwt_required()
 def watchlist():
@@ -363,6 +402,8 @@ def watchlist():
 """
 WATCHLIST - ADD
 """
+
+
 @routes.route("/watchlist/add", methods=["POST"])
 @jwt_required()
 def watchlist_add():
@@ -380,6 +421,8 @@ def watchlist_add():
 """
 WATCHLIST - REMOVE
 """
+
+
 @routes.route("/watchlist/remove", methods=["POST"])
 @jwt_required()
 def watchlist_remove():
@@ -393,21 +436,26 @@ def watchlist_remove():
     conn.close()
     return redirect("/watchlist")
 
+
 """
 ADMIN PAGE
 """
+
+
 @routes.route("/admin")
 @jwt_required()
 def admin():
     user_id = get_jwt_identity()
     conn = get_connection(DB_NAME)
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT name, email, is_verified FROM users WHERE id = %s", (user_id,))
+    cursor.execute(
+        "SELECT name, email, is_verified FROM users WHERE id = %s", (user_id,))
     user = cursor.fetchone()
     cursor.close()
     conn.close()
 
-    messages = {cat: msg for cat, msg in get_flashed_messages(with_categories=True)}
+    messages = {cat: msg for cat,
+                msg in get_flashed_messages(with_categories=True)}
 
     return render_template(
         "admin.html",
@@ -422,6 +470,8 @@ def admin():
 """
 ADMIN - UPDATE NAME
 """
+
+
 @routes.route("/admin/update-name", methods=["POST"])
 @jwt_required()
 def admin_update_name():
@@ -443,7 +493,7 @@ def admin_update_name():
     create_access_token(
         identity=user_id,
         additional_claims={
-            "name": new_name,    
+            "name": new_name,
         }
     )
 
@@ -455,6 +505,8 @@ def admin_update_name():
 ADMIN - UPDATE EMAIL
 Sets is_verified to False so the user must re-verify their new email.
 """
+
+
 @routes.route("/admin/update-email", methods=["POST"])
 @jwt_required()
 def admin_update_email():
@@ -469,7 +521,8 @@ def admin_update_email():
     conn = get_connection(DB_NAME)
     cursor = conn.cursor(dictionary=True)
 
-    cursor.execute("SELECT id FROM users WHERE email = %s AND id != %s", (new_email, user_id))
+    cursor.execute(
+        "SELECT id FROM users WHERE email = %s AND id != %s", (new_email, user_id))
     if cursor.fetchone():
         cursor.close()
         conn.close()
@@ -489,6 +542,8 @@ def admin_update_email():
 ADMIN - SEND VERIFICATION EMAIL
 Generates a fresh token and sends the verification email to the user's current email.
 """
+
+
 @routes.route("/admin/send-verification", methods=["POST"])
 @jwt_required()
 def admin_send_verification():
@@ -514,13 +569,15 @@ def admin_send_verification():
 """
 ADMIN - UPDATE PASSWORD
 """
+
+
 @routes.route("/admin/update-password", methods=["POST"])
 @jwt_required()
 def admin_update_password():
     user_id = get_jwt_identity()
 
     current_password = request.form.get("current_password", "")
-    new_password  = request.form.get("new_password", "")
+    new_password = request.form.get("new_password", "")
     confirm_password = request.form.get("confirm_password", "")
 
     if not new_password:
@@ -554,6 +611,8 @@ def admin_update_password():
 """
 ADMIN - EXPORT DATA AS CSV
 """
+
+
 @routes.route("/admin/export")
 @jwt_required()
 def admin_export():
@@ -571,7 +630,8 @@ def admin_export():
     writer = csv.writer(output)
 
     writer.writerow(["Holdings"])
-    writer.writerow(["Symbol", "Quantity", "Avg Cost", "Current Price", "Value", "Gain/Loss"])
+    writer.writerow(["Symbol", "Quantity", "Avg Cost",
+                    "Current Price", "Value", "Gain/Loss"])
     for row in holdings:
         writer.writerow(row[:6])
 
@@ -592,6 +652,8 @@ def admin_export():
 """
 LOGOUT
 """
+
+
 @routes.route("/logout")
 @jwt_required()
 def logout():
@@ -603,6 +665,8 @@ def logout():
 """
 ADMIN - DELETE ACCOUNT
 """
+
+
 @routes.route("/admin/delete-account", methods=["POST"])
 @jwt_required()
 def admin_delete_account():
@@ -623,9 +687,38 @@ def admin_delete_account():
     unset_jwt_cookies(resp)
     return resp
 
+
 """
 STOCK PAGE
 """
+
+
 @routes.route("/stocks/<ticker>")
 def stock_detail(ticker):
     return render_template("stocks.html", ticker=ticker)
+
+
+"""
+API - NEWS FOR TICKER
+"""
+
+
+@routes.route("/api/news/<ticker>")
+@jwt_required()
+def api_news(ticker):
+    conn = get_connection(DB_NAME)
+    cursor = conn.cursor(dictionary=True, buffered=True)
+
+    stock = get_stock_from_ticker(cursor, ticker.upper())
+
+    if not stock:
+        cursor.close()
+        conn.close()
+        return jsonify([])
+
+    articles = get_news_for_stock_id(cursor, stock['id'])
+
+    cursor.close()
+    conn.close()
+
+    return jsonify(articles)

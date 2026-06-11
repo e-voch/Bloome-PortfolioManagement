@@ -97,7 +97,7 @@
 
 /* Add section */
 .wl-add-section {
-    max-width: 700px;
+    max-width: 100%;
 }
 
 .wl-section-title {
@@ -154,7 +154,7 @@
     background: white;
     border: 1px solid #e0e0e0;
     border-radius: 10px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
     z-index: 100;
     overflow: hidden;
 }
@@ -296,4 +296,42 @@
 #wl-page-info {
     font-size: 13px;
     color: #9a9a94;
+}
+
+.news-article {
+    border-bottom: 0.5px solid #e2e8f0;
+    padding: 12px 0;
+}
+
+.news-article:last-child {
+    border-bottom: none;
+}
+
+.news-article-source {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 4px;
+}
+
+.news-article-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: #111;
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.news-article-ticker {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: #e8f0fe;
+    color: #1a56db;
+    margin-right: 8px;
+}
+
+.news-article-link {
+    font-size: 12px;
+    color: #888;
+    text-decoration: none;
 }
