@@ -1,6 +1,6 @@
 import yfinance as yf
 from app.db import get_connection, DB_NAME
-from app.queries import add_stock, update_price, update_previous_close
+from app.queries import add_stock, update_price, update_previous_close, get_or_create_industry
 
 STOCKS_FILE = "./stocks.txt"
 STOCK_LIST = open(STOCKS_FILE).read().splitlines()
@@ -51,8 +51,9 @@ def populate_stock_table():
         name = info.get('longName') or info.get('shortName', stock)
         logo = info.get('logo_url', '')
         industry = info.get('sector', 'Unknown')
-        
-        add_stock(cursor, name, stock, industry, logo)
+        industry_id = get_or_create_industry(cursor, industry)
+
+        add_stock(cursor, name, stock, industry_id, logo)
 
     conn.commit()
     cursor.close()
