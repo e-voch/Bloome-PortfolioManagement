@@ -40,7 +40,7 @@ def refresh_news():
         
         for article in news_data:
             print(article)
-            create_news_entry(cursor, stock_id, stock_data['symbol'], article[0], article[1], article[2], article[3])
+            create_news_entry(cursor, stock_id, article[0], article[1], article[2], article[3])
 
     conn.commit()
     cursor.close()

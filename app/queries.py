@@ -12,10 +12,18 @@ def get_user_by_email(cursor, email):
     )
     return cursor.fetchone()
 
-def add_stock(cursor, name, ticker, industry, logo):
+def get_or_create_industry(cursor, name):
+    cursor.execute("SELECT id FROM industries WHERE name = %s", (name,))
+    row = cursor.fetchone()
+    if row:
+        return row["id"]
+    cursor.execute("INSERT INTO industries (name) VALUES (%s)", (name,))
+    return cursor.lastrowid
+
+def add_stock(cursor, name, ticker, industry_id, logo):
     cursor.execute(
-        "INSERT INTO stocks (symbol, name, industry, logo) VALUES (%s, %s, %s, %s)",
-        (ticker, name, industry, logo)
+        "INSERT INTO stocks (symbol, name, industry_id, logo) VALUES (%s, %s, %s, %s)",
+        (ticker, name, industry_id, logo)
     )
 
 def update_price(cursor, ticker, price):
@@ -113,7 +121,12 @@ def get_transactions(cursor, user_id):
 
 def get_stock_from_ticker(cursor, ticker):
     cursor.execute(
-        "SELECT * FROM stocks WHERE symbol = %s",
+        """
+        SELECT s.*, i.name AS industry
+        FROM stocks s
+        JOIN industries i ON i.id = s.industry_id
+        WHERE s.symbol = %s
+        """,
         (ticker,)
     )
 
@@ -125,16 +138,21 @@ def delete_news_for_stock_id(cursor, stock_id):
         (stock_id,)
     )
 
-def create_news_entry(cursor, stock_id, ticker, title, url, publisher, published_at):
+def create_news_entry(cursor, stock_id, title, url, publisher, published_at):
     cursor.execute(
-        "INSERT INTO news (stock_id, ticker, title, url, publisher, published_at) VALUES  (%s, %s, %s, %s, %s, %s)",
-        (stock_id, ticker, title, url, publisher, published_at)
+        "INSERT INTO news (stock_id, title, url, publisher, published_at) VALUES (%s, %s, %s, %s, %s)",
+        (stock_id, title, url, publisher, published_at)
     )
 
 
 def get_news_for_stock_id(cursor, stock_id):
     cursor.execute(
-        "SELECT * FROM news WHERE stock_id = %s",
+        """
+        SELECT n.id, n.stock_id, s.symbol AS ticker, n.title, n.URL, n.publisher, n.published_at
+        FROM news n
+        JOIN stocks s ON s.id = n.stock_id
+        WHERE n.stock_id = %s
+        """,
         (stock_id,)
     )
 
@@ -220,6 +238,7 @@ def update_user_password(cursor, user_id, hashed_password):
     )
 
 def delete_user(cursor, user_id):
+    cursor.execute("DELETE FROM watchlist WHERE user_id = %s", (user_id,))
     cursor.execute("DELETE FROM holdings WHERE user_id = %s", (user_id,))
     cursor.execute("DELETE FROM transactions WHERE user_id = %s", (user_id,))
     cursor.execute("DELETE FROM users WHERE id = %s", (user_id,))
