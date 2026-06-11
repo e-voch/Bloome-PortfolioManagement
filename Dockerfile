@@ -12,4 +12,4 @@ COPY . .
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "python init_database.py && python app.py"]
+CMD ["python", "app.py"]

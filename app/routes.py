@@ -319,7 +319,7 @@ def news():
 
     return render_template(
         "news.html",
-        name=claims["claims"],
+        name=claims["name"],
         articles=articles
     )
 

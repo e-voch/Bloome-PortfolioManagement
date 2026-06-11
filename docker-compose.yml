@@ -5,3 +5,19 @@ services:
     build: . 
     ports:
       - "5000:500"
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_USER: root
+      DB_PASSWORD: password
+      DB_NAME: mydb
+    volumes:
+      - .:/app
+
+  db:
+    image: mysql:8
+    restart: always
+    environment: 
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: portfolio_database
