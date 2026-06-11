@@ -1,11 +1,20 @@
 from flask import Flask
 from routes import routes
 from mail import mail
+from datetime import timedelta
+from auth import init_jwt
 
 app = Flask(__name__)
 
 app.secret_key = "secret-key"
 app.register_blueprint(routes)
+
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=30)
+app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
+app.config["JWT_COOKIE_SAMESITE"] = "Lax"
+app.config["JWT_ACCESS_COOKIE_PATH"] = "/"
+app.config["JWT_COOKIE_SECURE"] = "False"
+app.config["JWT_COOKIE_CSRF_PROTECT"] = False
 
 app.config.update(
     MAIL_SERVER="smtp.gmail.com",
@@ -17,6 +26,7 @@ app.config.update(
 )
 
 mail.init_app(app)
+init_jwt(app)
 
 if __name__ == "__main__":
     app.run(debug=True)

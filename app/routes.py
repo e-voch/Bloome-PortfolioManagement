@@ -1,10 +1,11 @@
 import secrets
 import csv
 import io
-from flask import Blueprint, request, render_template, redirect, session, flash, get_flashed_messages, make_response, url_for
-from queries import create_user, get_user_by_email, get_total_value, get_daily_gain, get_original_investment, get_holdings, get_transactions, get_transaction, recompute_holding
+from flask import Blueprint, request, render_template, redirect, flash, get_flashed_messages, make_response, jsonify 
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, get_jwt, unset_jwt_cookies, set_access_cookies
+from queries import create_user, get_user_by_email, get_total_value, get_daily_gain, get_original_investment, get_holdings, get_transactions
 from queries import create_transaction, get_stock_from_ticker, get_news_for_stock_id, update_user_name, update_user_email, set_verification_token, update_user_password, delete_user
-from queries import get_watchlist, get_all_stocks, add_to_watchlist, remove_from_watchlist, delete_transaction
+from queries import get_watchlist, get_all_stocks, add_to_watchlist, remove_from_watchlist, recompute_holding, get_transaction, delete_transaction
 from db import get_connection, DB_NAME
 from werkzeug.security import generate_password_hash, check_password_hash
 from mail import send_verification_email
@@ -52,12 +53,18 @@ def login():
     if not user["is_verified"]:
         flash("Please verify your email first", "danger")
         return redirect("/login")
+    
+    access_token = create_access_token(
+        identity=str(user["id"]),
+        additional_claims={
+            "name": user["name"]
+        }
+    )
 
-    session["user_id"] = user["id"]
-    session["name"] = user["name"]
+    response = redirect("/dashboard")
+    set_access_cookies(response, access_token)
     
-    return redirect("/dashboard")
-    
+    return response
 """
 HANDLES SIGNUP LOGIC
 """
@@ -131,21 +138,24 @@ def verify_token(token):
 HANDLES DASHBOARD PAGE
 """
 @routes.route("/dashboard")
+@jwt_required()
 def dashboard():
     chart_colours = ['#4285f4', '#34a853', '#f4511e', '#888']
     conn = get_connection(DB_NAME)
-
     cursor = conn.cursor()
 
-    total_value = get_total_value(cursor, session.get("user_id"))
-    day_change = get_daily_gain(cursor, session.get("user_id")) 
-    total_investment = get_original_investment(cursor, session.get("user_id")) 
+    user_id = get_jwt_identity()
+    claims = get_jwt()
+
+    total_value = get_total_value(cursor, user_id)
+    day_change = get_daily_gain(cursor, user_id) 
+    total_investment = get_original_investment(cursor, user_id) 
 
     total_gain = total_value - total_investment
     day_change_percentage = round((day_change / total_value) * 100) if total_value else 0
     total_return_percentage = round((total_gain / total_investment) * 100) if total_investment else 0
 
-    holdings = get_holdings(cursor, session.get("user_id"))
+    holdings = get_holdings(cursor, user_id)
     
     stock_allocation_chart_values = generate_stock_allocation_values(holdings, total_value, chart_colours) 
     industry_allocation_chart_values =  generate_industry_allocation_values(holdings, total_value, chart_colours) 
@@ -156,7 +166,7 @@ def dashboard():
 
     return render_template(
          "dashboard.html",
-         name = session.get("name"),
+         name=claims["name"],
          total_value=total_value,
          day_change=day_change,
          total_gain=total_gain,
@@ -171,12 +181,15 @@ def dashboard():
 HANDLES HOLDINGS PAGE
 """
 @routes.route("/holdings")
+@jwt_required()
 def holdings():
     conn = get_connection(DB_NAME)
-
     cursor = conn.cursor()
     
-    data = get_holdings(cursor, session.get("user_id"))
+    user_id = get_jwt_identity()
+    claims = get_jwt()
+
+    data = get_holdings(cursor, user_id)
 
     holdings = []
 
@@ -191,7 +204,7 @@ def holdings():
 
     return render_template(
         "holdings.html",
-        name = session.get("name"),
+        name=claims["name"],
         holdings=holdings,
         total_value=total_value,
         total_earnings=total_earnings
@@ -201,12 +214,15 @@ def holdings():
 Handles TRANSACTIONS PAGE
 """
 @routes.route("/transactions")
+@jwt_required()
 def transactions():
     conn = get_connection(DB_NAME)
-
     cursor = conn.cursor()
 
-    transactions = get_transactions(cursor, session.get("user_id"))
+    user_id = get_jwt_identity()
+    claims = get_jwt()
+
+    transactions = get_transactions(cursor, user_id)
 
     transactions.sort(key=lambda x: x[0], reverse=True)
     
@@ -218,8 +234,8 @@ def transactions():
 
     return render_template(
         "transactions.html",
-        transactions = transactions,
-        name = session.get("name"),
+        transactions=transactions,
+        name=claims["name"],
         open_modal=open_modal
     )
 
@@ -228,6 +244,7 @@ def transactions():
 ADDS TRANSACTION
 """
 @routes.route("/add_transaction", methods = ["POST"])
+@jwt_required()
 def add_transaction():
     conn = get_connection(DB_NAME)
     cursor = conn.cursor(dictionary=True)
@@ -237,12 +254,11 @@ def add_transaction():
     date = request.form.get("date") 
     shares = request.form.get("shares") 
     price = request.form.get("price") 
+    
+    user_id = get_jwt_identity()
 
-    user_id = session.get("user_id")
     stock_details = get_stock_from_ticker(cursor, ticker.upper())
         
-    print(stock_details)
-
     if not stock_details:
         flash("Stock ticker not recognised", "danger")
         return redirect("/transactions?open_modal=1")
@@ -263,14 +279,17 @@ def add_transaction():
 DELETES TRANSACTION
 """
 @routes.route("/delete_transaction/<int:transaction_id>", methods = ["POST"])
+@jwt_required()
 def remove_transaction(transaction_id):
     conn = get_connection(DB_NAME)
     cursor = conn.cursor(dictionary=True)
     
     transaction_details = get_transaction(cursor, transaction_id) 
 
+    user_id = get_jwt_identity()
+
     delete_transaction(cursor, transaction_id)
-    recompute_holding(cursor, session["user_id"], transaction_details['stock_id'])
+    recompute_holding(cursor, user_id, transaction_details['stock_id'])
     
     conn.commit()
     conn.close()
@@ -281,11 +300,13 @@ def remove_transaction(transaction_id):
 NEWS PAGE
 """
 @routes.route("/news")
+@jwt_required()
 def news():
     conn = get_connection(DB_NAME)
     cursor = conn.cursor(dictionary=True)
 
-    user_id = session.get("user_id")
+    user_id = get_jwt_identity()
+    claims = get_jwt()
 
     holdings = get_holdings(cursor, user_id)
     
@@ -298,7 +319,7 @@ def news():
 
     return render_template(
         "news.html",
-        name = session["name"],
+        name=claims["name"],
         articles=articles
     )
 
@@ -306,10 +327,13 @@ def news():
 WATCHLIST PAGE
 """
 @routes.route("/watchlist")
+@jwt_required()
 def watchlist():
-    user_id = session.get("user_id")
     conn = get_connection(DB_NAME)
     cursor = conn.cursor()
+
+    user_id = get_jwt_identity()
+    claims = get_jwt()
 
     watchlist_items = get_watchlist(cursor, user_id)
     all_stocks = get_all_stocks(cursor)
@@ -329,7 +353,7 @@ def watchlist():
 
     return render_template(
         "watchlist.html",
-        name=session.get("name"),
+        name=claims["name"],
         watchlist=watchlist_items,
         all_stocks=all_stocks_json,
         watchlist_ids=watchlist_ids
@@ -340,8 +364,9 @@ def watchlist():
 WATCHLIST - ADD
 """
 @routes.route("/watchlist/add", methods=["POST"])
+@jwt_required()
 def watchlist_add():
-    user_id = session.get("user_id")
+    user_id = get_jwt_identity()
     stock_id = request.form.get("stock_id")
     conn = get_connection(DB_NAME)
     cursor = conn.cursor()
@@ -356,8 +381,9 @@ def watchlist_add():
 WATCHLIST - REMOVE
 """
 @routes.route("/watchlist/remove", methods=["POST"])
+@jwt_required()
 def watchlist_remove():
-    user_id = session.get("user_id")
+    user_id = get_jwt_identity()
     stock_id = request.form.get("stock_id")
     conn = get_connection(DB_NAME)
     cursor = conn.cursor()
@@ -371,10 +397,12 @@ def watchlist_remove():
 ADMIN PAGE
 """
 @routes.route("/admin")
+@jwt_required()
 def admin():
+    user_id = get_jwt_identity()
     conn = get_connection(DB_NAME)
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT name, email, is_verified FROM users WHERE id = %s", (session.get("user_id"),))
+    cursor.execute("SELECT name, email, is_verified FROM users WHERE id = %s", (user_id,))
     user = cursor.fetchone()
     cursor.close()
     conn.close()
@@ -395,8 +423,11 @@ def admin():
 ADMIN - UPDATE NAME
 """
 @routes.route("/admin/update-name", methods=["POST"])
+@jwt_required()
 def admin_update_name():
     new_name = request.form.get("name", "").strip()
+
+    user_id = get_jwt_identity()
 
     if not new_name:
         flash("Name cannot be empty.", "name_error")
@@ -404,12 +435,18 @@ def admin_update_name():
 
     conn = get_connection(DB_NAME)
     cursor = conn.cursor()
-    update_user_name(cursor, session.get("user_id"), new_name)
+    update_user_name(cursor, user_id, new_name)
     conn.commit()
     cursor.close()
     conn.close()
 
-    session["name"] = new_name
+    create_access_token(
+        identity=user_id,
+        additional_claims={
+            "name": new_name,    
+        }
+    )
+
     flash("Name updated successfully.", "name_success")
     return redirect("/admin")
 
@@ -419,8 +456,10 @@ ADMIN - UPDATE EMAIL
 Sets is_verified to False so the user must re-verify their new email.
 """
 @routes.route("/admin/update-email", methods=["POST"])
+@jwt_required()
 def admin_update_email():
-    user_id = session.get("user_id")
+    user_id = get_jwt_identity()
+
     new_email = request.form.get("email", "").strip()
 
     if not new_email:
@@ -451,8 +490,10 @@ ADMIN - SEND VERIFICATION EMAIL
 Generates a fresh token and sends the verification email to the user's current email.
 """
 @routes.route("/admin/send-verification", methods=["POST"])
+@jwt_required()
 def admin_send_verification():
-    user_id = session.get("user_id")
+    user_id = get_jwt_identity()
+
     token = secrets.token_urlsafe(32)
 
     conn = get_connection(DB_NAME)
@@ -474,8 +515,10 @@ def admin_send_verification():
 ADMIN - UPDATE PASSWORD
 """
 @routes.route("/admin/update-password", methods=["POST"])
+@jwt_required()
 def admin_update_password():
-    user_id = session.get("user_id")
+    user_id = get_jwt_identity()
+
     current_password = request.form.get("current_password", "")
     new_password  = request.form.get("new_password", "")
     confirm_password = request.form.get("confirm_password", "")
@@ -512,8 +555,9 @@ def admin_update_password():
 ADMIN - EXPORT DATA AS CSV
 """
 @routes.route("/admin/export")
+@jwt_required()
 def admin_export():
-    user_id = session.get("user_id")
+    user_id = get_jwt_identity()
     conn = get_connection(DB_NAME)
     cursor = conn.cursor()
 
@@ -549,22 +593,25 @@ def admin_export():
 LOGOUT
 """
 @routes.route("/logout")
+@jwt_required()
 def logout():
-    session.clear()
-    return redirect("/")
+    resp = redirect("/")
+    unset_jwt_cookies(resp)
+    return resp
 
 
 """
 ADMIN - DELETE ACCOUNT
 """
 @routes.route("/admin/delete-account", methods=["POST"])
+@jwt_required()
 def admin_delete_account():
     confirm = request.form.get("confirm", "")
     if confirm != "CONFIRM":
         flash("Please type CONFIRM to delete your account.", "delete_error")
         return redirect("/admin")
 
-    user_id = session.get("user_id")
+    user_id = get_jwt_identity()
     conn = get_connection(DB_NAME)
     cursor = conn.cursor()
     delete_user(cursor, user_id)
@@ -572,19 +619,9 @@ def admin_delete_account():
     cursor.close()
     conn.close()
 
-    session.clear()
-    return redirect("/")
-
-
-@routes.route("/chart")
-def chart():
-    holdings = [
-        {"ticker": "NVDA", "sector": "Technology", "value": 8295},
-        {"ticker": "AAPL", "sector": "Technology", "value": 6840},
-        {"ticker": "TSLA", "sector": "Consumer",   "value": 5362},
-        {"ticker": "MSFT", "sector": "Technology", "value": 3884},
-    ]
-    return render_template("chart.html", holdings=holdings)
+    resp = redirect("/")
+    unset_jwt_cookies(resp)
+    return resp
 
 """
 STOCK PAGE

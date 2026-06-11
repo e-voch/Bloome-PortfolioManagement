@@ -61,7 +61,9 @@ def generate_industry_allocation_values(holdings, total_value, chart_colours):
     
     industry_weights.sort(key=lambda x: x["percentage"], reverse=True)
     
-    for i in range(min(num_holdings, 3)):
+    print(industry_weights)
+
+    for i in range(min(len(industry_weights), 3)):
         industry_weights[i]["colour"] = chart_colours[i]
 
     industry_allocation_chart_values = industry_weights
