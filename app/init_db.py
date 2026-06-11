@@ -31,14 +31,22 @@ def create_tables():
     """)
 
     cursor.execute("""
+        CREATE TABLE IF NOT EXISTS industries (
+            id   INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(100) UNIQUE NOT NULL
+        )
+    """)
+
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS stocks (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            symbol VARCHAR(50) NOT NULL,
-            name VARCHAR(50) NOT NULL, 
-            industry VARCHAR(100) NOT NULL,
-            logo VARCHAR(100) NOT NULL,
-            current_price DECIMAL(12, 2),
-            previous_close DECIMAL(12, 2)
+            id          INT AUTO_INCREMENT PRIMARY KEY,
+            symbol      VARCHAR(50) NOT NULL,
+            name        VARCHAR(255) NOT NULL,
+            industry_id INT NOT NULL,
+            logo        VARCHAR(255) NOT NULL,
+            current_price  DECIMAL(12, 2),
+            previous_close DECIMAL(12, 2),
+            FOREIGN KEY (industry_id) REFERENCES industries(id) ON DELETE RESTRICT
         )
     """)
 
@@ -48,8 +56,9 @@ def create_tables():
             stock_id INT,
             net_quantity INT,
             avg_cost DECIMAL(12, 2),
-
-            PRIMARY KEY (user_id, stock_id)
+            PRIMARY KEY (user_id, stock_id),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (stock_id) REFERENCES stocks(id) ON DELETE RESTRICT
         )
     """)
 
@@ -58,23 +67,24 @@ def create_tables():
             id INT AUTO_INCREMENT PRIMARY KEY,
             user_id INT,
             stock_id INT,
-            symbol VARCHAR(50),
             type ENUM('BUY', 'SELL'),
             quantity INT,
             price DECIMAL(12, 2),
-            date DATE 
-        )               
+            date DATE,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (stock_id) REFERENCES stocks(id) ON DELETE RESTRICT
+        )
     """)
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS news (
             id INT AUTO_INCREMENT PRIMARY KEY,
             stock_id INT NOT NULL,
-            ticker VARCHAR(50) NOT NULL,
             title VARCHAR(500) NOT NULL,
             URL VARCHAR(2000),
             publisher VARCHAR(500),
-            published_at DATETIME
+            published_at DATETIME,
+            FOREIGN KEY (stock_id) REFERENCES stocks(id) ON DELETE CASCADE
         )
     """)
 
@@ -82,7 +92,9 @@ def create_tables():
         CREATE TABLE IF NOT EXISTS watchlist (
             user_id INT NOT NULL,
             stock_id INT NOT NULL,
-            PRIMARY KEY (user_id, stock_id)
+            PRIMARY KEY (user_id, stock_id),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (stock_id) REFERENCES stocks(id) ON DELETE CASCADE
         )
     """)
 
