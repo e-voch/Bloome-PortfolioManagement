@@ -1,16 +1,13 @@
 from flask import Flask
+from flask_jwt_extended import JWTManager
 from routes import routes
 from mail import mail
 from datetime import timedelta
-from auth import init_jwt
 
 app = Flask(__name__)
 
 app.secret_key = "secret-key"
 app.register_blueprint(routes)
-
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=30)
-app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
 
 app.config.update(
     MAIL_SERVER="smtp.gmail.com",
@@ -21,8 +18,10 @@ app.config.update(
     MAIL_DEFAULT_SENDER="bloome.notifications@gmail.com"
 )
 
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=30)
+
 mail.init_app(app)
-init_jwt(app)
+jwt = JWTManager(app)
 
 if __name__ == "__main__":
     app.run(debug=True)
