@@ -166,7 +166,7 @@ def recompute_holding(cursor, user_id, stock_id):
     for transaction in cursor.fetchall():
         if transaction["type"] == "BUY":
             quantity += transaction["quantity"]
-            cost += transaction["price"]
+            cost += transaction["price"] * quantity
         elif transaction["type"] == "SELL":
             quantity -= transaction["quantity"]
 

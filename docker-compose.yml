@@ -10,7 +10,7 @@ services:
     environment:
       DB_HOST: db
       DB_USER: root
-      DB_PASSWORD: password
+      DB_PASSWORD: !Tiger456
       DB_NAME: mydb
     volumes:
       - .:/app
@@ -19,5 +19,40 @@ services:
     image: mysql:8
     restart: always
     environment: 
-      MYSQL_ROOT_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: !Tiger456
       MYSQL_DATABASE: portfolio_database
+    ports:
+      - "3006:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  news_worker:
+    build: .
+    container_name: news_worker
+    command: python3 -m app.workers.news_updater
+    depends_on:
+      - db
+    environment: 
+      DB_HOST: db
+      DB_USER: root
+      DB_PASSWORD: !Tiger456
+      DB_NAME: portfolio_database
+    volumes:
+      - .:/app
+
+  stock_info_workder:
+    build: .
+    container_name: stock_info_worer
+    command: python3 -m app.workers.news_updater
+    depends_on:
+      - db
+    environment: 
+      DB_HOST: db
+      DB_USER: root
+      DB_PASSWORD: !Tiger456
+      DB_NAME: portfolio_database
+    volumes:
+      - .:/app
+
+volumes:
+  db_data:
